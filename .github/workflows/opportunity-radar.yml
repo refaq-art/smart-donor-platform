@@ -1,0 +1,38 @@
+name: Opportunity Radar
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run radar
+        run: node scripts/radar.js
+
+      - name: Commit updated opportunities
+        run: |
+          git config user.name "opportunity-radar-bot"
+          git config user.email "actions@github.com"
+          git add opportunities.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Update open opportunities"
+            git push
+          fi
