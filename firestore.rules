@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsOrg(orgId) {
+      return signedIn() && request.auth.uid == orgId;
+    }
+
+    match /organizations/{orgId} {
+      allow create: if signedIn() && request.auth.uid == orgId;
+      allow read, update, delete: if ownsOrg(orgId);
+    }
+
+    match /organizations/{orgId}/{document=**} {
+      allow read, write: if ownsOrg(orgId);
+    }
+  }
+}
