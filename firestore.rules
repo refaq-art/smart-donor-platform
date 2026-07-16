@@ -5,17 +5,21 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isAdmin() {
+      return signedIn() && request.auth.token.email.lower() == 'mshary307@gmail.com';
+    }
+
     function ownsOrg(orgId) {
       return signedIn() && request.auth.uid == orgId;
     }
 
     match /organizations/{orgId} {
       allow create: if signedIn() && request.auth.uid == orgId;
-      allow read, update, delete: if ownsOrg(orgId);
+      allow read, update, delete: if ownsOrg(orgId) || isAdmin();
     }
 
     match /organizations/{orgId}/{document=**} {
-      allow read, write: if ownsOrg(orgId);
+      allow read, write: if ownsOrg(orgId) || isAdmin();
     }
   }
 }
