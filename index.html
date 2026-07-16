@@ -3,97 +3,48 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>مستشار الدعم الذكي للجمعيات</title>
+<title>منصة تنمية موارد الجمعيات</title>
 <style>
-:root{--brand:#0f766e;--dark:#102522;--gold:#b8892d;--bg:#f7f2e9;--card:#fffaf1;--line:#e4dac8;--text:#142b27;--muted:#66746f;--red:#b42318;--blue:#175cd3;--green:#087443}*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#edfdf8,#f7f2e9);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;color:var(--text)}a{color:inherit}.layout{min-height:100vh;display:grid;grid-template-columns:290px 1fr}.side{background:linear-gradient(180deg,#0d2a26,#102522);color:white;padding:22px;position:sticky;top:0;height:100vh;overflow:auto}.brand{display:flex;gap:12px;align-items:center;margin-bottom:20px}.logo{width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,var(--brand),var(--gold));display:grid;place-items:center;font-weight:900;font-size:25px}.brand h1{margin:0;font-size:18px}.brand p{margin:4px 0 0;color:#bdd3cf;font-size:13px}.nav{display:grid;gap:8px}.nav a{text-decoration:none;color:white;padding:12px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}.nav a:hover{background:rgba(255,255,255,.14)}.note{margin-top:18px;color:#d8ebe7;background:rgba(255,255,255,.08);padding:13px;border-radius:16px;font-size:13px;line-height:1.8}.main{padding:24px}.hero{background:linear-gradient(135deg,#102522,#0f766e);color:white;border-radius:28px;padding:28px;margin-bottom:18px;box-shadow:0 18px 45px rgba(0,0,0,.12)}h2{font-size:30px;margin:0 0 8px}h3{margin:0 0 10px}.hero p{line-height:1.8;color:#def5f0}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.btn,button{border:0;background:var(--brand);color:white;border-radius:14px;padding:11px 15px;font-weight:800;text-decoration:none;cursor:pointer;display:inline-flex}.secondary{background:white;color:var(--text);border:1px solid var(--line)}.goldbtn{background:var(--gold)}.grid{display:grid;gap:16px}.cards{grid-template-columns:repeat(4,1fr)}.two{grid-template-columns:1.1fr .9fr}.three{grid-template-columns:repeat(3,1fr)}.card{background:rgba(255,250,241,.96);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 14px 36px rgba(14,37,34,.08)}.white{background:white}.stat span{color:var(--muted);font-weight:700}.stat b{display:block;color:var(--brand);font-size:30px;margin-top:8px}.pill{display:inline-flex;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#e7f5f2;color:var(--brand);margin:3px}.gold{background:#fff1d6;color:#8a5b00}.red{background:#fee4e2;color:var(--red)}.blue{background:#e8f1ff;color:var(--blue)}.green{background:#e7f8ef;color:var(--green)}.small{font-size:13px;color:var(--muted);line-height:1.8}.section{margin:26px 0 12px}.table{overflow:auto;border-radius:20px;border:1px solid var(--line);background:white}table{width:100%;border-collapse:collapse;min-width:720px}th,td{padding:13px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}th{background:#fffcf6;color:var(--muted);font-size:13px}.project{background:white;border:1px solid var(--line);border-radius:22px;padding:18px}.progress{height:10px;background:#eee3d0;border-radius:999px;overflow:hidden}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#20b19f)}input,textarea,select{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px;margin-top:5px;font:inherit;background:white}textarea{min-height:120px}.mobile{display:none}@media(max-width:900px){.layout{display:block}.side{position:relative;height:auto;display:none}.side.open{display:block}.main{padding:15px}.cards,.two,.three{grid-template-columns:1fr}.mobile{display:inline-flex;margin-bottom:12px}table{min-width:650px}}
+:root{--brand:#0f766e;--dark:#102522;--gold:#b8892d;--bg:#f7f2e9;--card:#fffaf1;--line:#e4dac8;--text:#142b27;--muted:#66746f;--red:#b42318;--blue:#175cd3;--green:#087443}*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#e9fff8,#f7f2e9);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;color:var(--text)}.wrap{max-width:1160px;margin:auto;padding:22px}.hero{background:linear-gradient(135deg,#102522,#0f766e);color:white;border-radius:32px;padding:32px;margin-bottom:18px;box-shadow:0 18px 45px rgba(0,0,0,.13)}h1{font-size:40px;margin:0 0 12px}h2{font-size:28px;margin:0 0 12px}.hero p{font-size:19px;line-height:1.9;color:#dff4ef}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}a.btn,button{background:var(--brand);color:white;border:0;border-radius:15px;padding:12px 16px;text-decoration:none;font-weight:900;display:inline-flex}.gold{background:var(--gold)!important}.secondary{background:white!important;color:var(--text)!important;border:1px solid var(--line)!important}.grid{display:grid;gap:16px}.cards{grid-template-columns:repeat(3,1fr)}.two{grid-template-columns:1fr 1fr}.card{background:rgba(255,250,241,.96);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 14px 36px rgba(14,37,34,.08)}.small{font-size:14px;color:var(--muted);line-height:1.8}.pill{display:inline-flex;border-radius:999px;padding:7px 11px;background:#e7f5f2;color:var(--brand);font-weight:900;font-size:12px}.warn{background:#fff1d6;color:#8a5b00;border:1px solid #f1d08a}.footer{text-align:center;color:var(--muted);padding:25px}.mobile-note{display:none}@media(max-width:850px){.wrap{padding:14px}h1{font-size:31px}.hero{padding:25px}.cards,.two{grid-template-columns:1fr}.mobile-note{display:block}}
 </style>
 </head>
 <body>
-<div class="layout">
-<aside class="side" id="side">
-<div class="brand"><div class="logo">د</div><div><h1>مستشار الدعم الذكي</h1><p>منصة متكاملة مجانية</p></div></div>
-<nav class="nav">
-<a href="#dashboard">الرئيسية</a>
-<a href="#auto-radar">الرادار التلقائي</a>
-<a href="#radar">رادار الفرص المفتوحة</a>
-<a href="#donors">الداعمين</a>
-<a href="#projects">المشاريع</a>
-<a href="#support">الدعومات السابقة</a>
-<a href="#advisor">مستشار الدعم</a>
-<a href="#today">ماذا أفعل اليوم؟</a>
-<a href="#portfolio">محفظة المشاريع</a>
-<a href="#letters">الخطابات</a>
-<a href="#impact">تقارير الأثر</a>
-</nav>
-<div class="note">تم دمج الرادار التلقائي: صفحة مستقلة تعرض ملف الفرص الذي يحدثه GitHub Actions كل 6 ساعات تقريبًا.</div>
-</aside>
-<main class="main">
-<button class="mobile secondary" onclick="document.getElementById('side').classList.toggle('open')">☰ القائمة</button>
-<section class="hero" id="dashboard">
-<h2>منصة تنمية موارد متكاملة</h2>
-<p>إدارة الداعمين، المشاريع، الدعومات السابقة، رادار الفرص المفتوحة، الرادار التلقائي، مستشار المطابقة، الخطابات، تقارير الأثر، ورابط محفظة مشاريع عام.</p>
-<div class="actions"><a class="btn goldbtn" href="auto-radar.html?v=2">فتح الرادار التلقائي</a><a class="btn secondary" href="opportunities.json" target="_blank">ملف الفرص JSON</a><a class="btn" href="#radar">رادار الفرص</a><a class="btn" href="#advisor">تشغيل المستشار</a></div>
+<div class="wrap">
+<section class="hero">
+<span class="pill">منصة محمية بتسجيل الدخول</span>
+<h1>منصة تنمية موارد متكاملة للجمعيات</h1>
+<p>منصة لإدارة المشاريع، الداعمين، الدعومات السابقة، الفرص المفتوحة، المهام، الخطابات، وتقارير الأثر. الوصول إلى الرادار والبيانات التشغيلية يتم بعد تسجيل الدخول فقط.</p>
+<div class="actions">
+<a class="btn gold" href="login-firebase.html?v=10">تسجيل الدخول / إنشاء حساب</a>
+<a class="btn" href="app.html?v=2">لوحة الجمعية الذكية</a>
+<a class="btn secondary" href="#features">استعراض المزايا</a>
+</div>
 </section>
-<div class="grid cards">
-<div class="card stat"><span>الداعمين</span><b>3</b><small class="small">جهات نموذجية</small></div>
-<div class="card stat"><span>الفرص المفتوحة</span><b>2+</b><small class="small">تزيد تلقائيًا</small></div>
-<div class="card stat"><span>المشاريع</span><b>3</b><small class="small">جاهزة للعرض</small></div>
-<div class="card stat"><span>التحديث التلقائي</span><b>6س</b><small class="small">GitHub Actions</small></div>
+<div class="card warn">
+<b>تنبيه أمني:</b> تمت إزالة الروابط المباشرة لملف الفرص JSON من الواجهة العامة. الرادار التلقائي وصفحة الفرص محمية الآن بتسجيل الدخول. أي بيانات تشغيلية حساسة يجب نقلها إلى Firestore داخل حساب الجمعية.
 </div>
-<section class="section" id="auto-radar"><h2>الرادار التلقائي</h2></section>
-<div class="hero"><h3>البحث والتعبئة التلقائية للفرص المفتوحة</h3><p>تمت إضافة Workflow مجدول في GitHub Actions يقوم كل 6 ساعات بالبحث في Google News RSS عن فرص الدعم والمنح والمسؤولية الاجتماعية، ثم يعبئ ملف <b>opportunities.json</b>. صفحة الرادار التلقائي تعرض النتائج وتوفر زر نسخ رسالة متابعة.</p><div class="actions"><a class="btn goldbtn" href="auto-radar.html?v=2">فتح صفحة الرادار التلقائي</a><a class="btn secondary" href="opportunities.json?v=2" target="_blank">عرض ملف الفرص</a><a class="btn" href="https://github.com/refaq-art/smart-donor-platform/actions" target="_blank">تشغيل/متابعة GitHub Actions</a></div></div>
 <br>
-<div class="grid three">
-<div class="card white"><span class="pill green">1</span><h3>بحث تلقائي</h3><p class="small">يبحث عن كلمات مثل منح الجمعيات، دعم غير ربحي، مسؤولية اجتماعية، وفرص دعم المشاريع.</p></div>
-<div class="card white"><span class="pill blue">2</span><h3>تصنيف ومطابقة</h3><p class="small">يصنف الفرصة إلى تعليمي، غذائي، تقني، صحي، أو تنموي ويقترح المشروع الأنسب.</p></div>
-<div class="card white"><span class="pill gold">3</span><h3>تعبئة ملف الفرص</h3><p class="small">يكتب النتائج في opportunities.json لتظهر في صفحة auto-radar.html تلقائيًا.</p></div>
-</div>
-<section class="section" id="radar"><h2>رادار الفرص المفتوحة</h2></section>
-<div class="hero"><h3>رادار الجهات المانحة المفتوحة</h3><p>هذا القسم يسجل الفرص المفتوحة ويقترح المشروع المناسب ورسالة المتابعة. يمكن استخدام الرادار التلقائي كمصدر يومي لإضافة فرص جديدة بعد مراجعتها.</p><div class="actions"><button onclick="window.open('https://www.google.com/search?q=منح+الجمعيات+الخيرية+السعودية+فتح+التقديم','_blank')">بحث عن منح مفتوحة</button><button onclick="window.open('https://www.google.com/search?q=مسؤولية+اجتماعية+شركات+دعم+الجمعيات+السعودية','_blank')">بحث عن شركات داعمة</button></div></div>
+<section id="features" class="grid cards">
+<div class="card"><h2>إدارة المشاريع</h2><p class="small">أضف مشاريع الجمعية، المبالغ المطلوبة، المستفيدين، الفجوات التمويلية، الوصف، الأهداف، والمخرجات.</p></div>
+<div class="card"><h2>CRM الداعمين</h2><p class="small">إدارة جهات الدعم، درجة العلاقة، مجالات الاهتمام، التواصل، والدعومات السابقة لكل جهة.</p></div>
+<div class="card"><h2>الرادار المحمي</h2><p class="small">عرض الفرص المرصودة واستيرادها إلى حساب الجمعية بعد تسجيل الدخول، مع مراجعة بشرية قبل الاعتماد.</p></div>
+<div class="card"><h2>مركز الذكاء</h2><p class="small">مطابقة الفرص مع المشاريع، توصيات يومية، أولويات متابعة، وتوليد خطابات وتقارير أثر.</p></div>
+<div class="card"><h2>الخطابات</h2><p class="small">توليد خطابات طلب دعم، متابعة، وشكر بناءً على بيانات الداعم والمشروع.</p></div>
+<div class="card"><h2>تقارير الأثر</h2><p class="small">إنشاء تقارير أثر مختصرة للداعمين وربطها بالدعومات السابقة قبل طلب دعم جديد.</p></div>
+</section>
 <br>
-<div class="grid two">
-<div class="card white"><span class="pill green">مفتوحة</span><h3>فرصة دعم مشاريع تعليمية وتمكينية</h3><p class="small">مؤسسة مانحة تعليمية — الرياض — الموعد: 30/08/2026</p><p>مناسبة لمشروع كفالة تعليم الأيتام، ونسبة الملاءمة التقديرية 85%.</p><textarea>السلام عليكم ورحمة الله وبركاته
-
-سعادة/ مؤسسة مانحة تعليمية المحترمين
-
-اطلعنا على فرصة دعم المشاريع التعليمية، ونرى أن مشروع كفالة تعليم الأيتام يتوافق مع مجال دعمكم، ويسعدنا تزويدكم بملف المشروع ودراسة إمكانية دعمه.
-
-وتفضلوا بقبول خالص الشكر والتقدير.</textarea></div>
-<div class="card white"><span class="pill gold">تحت المتابعة</span><h3>مبادرة مسؤولية اجتماعية غذائية</h3><p class="small">شركة غذائية نموذجية — حائل — الموعد: 15/09/2026</p><p>مناسبة لمشروع السلال الغذائية للأسر، ونسبة الملاءمة التقديرية 80%.</p><textarea>السلام عليكم ورحمة الله وبركاته
-
-نأمل دراسة فرصة الشراكة في مشروع السلال الغذائية للأسر، والذي يحقق أثرًا مباشرًا وملموسًا في سد الاحتياج الغذائي للأسر المستفيدة.</textarea></div>
+<section class="grid two">
+<div class="card">
+<h2>طريقة الاستخدام</h2>
+<p class="small">١) أنشئ حساب جمعية أو سجل دخولك. ٢) افتح لوحة الجمعية الذكية. ٣) أضف مشاريع وداعمين ودعومات. ٤) استورد الفرص من الرادار المحمي. ٥) استخدم مركز الذكاء للتوصيات والخطابات.</p>
+<div class="actions"><a class="btn gold" href="login-firebase.html?v=10">ابدأ الآن</a></div>
 </div>
-<section class="section" id="donors"><h2>الداعمين</h2></section>
-<div class="table"><table><tr><th>الجهة</th><th>القطاع</th><th>العلاقة</th><th>أفضل مشروع</th><th>الإجراء</th></tr><tr><td><b>مؤسسة مانحة تعليمية</b><div class="small">الرياض</div></td><td>تعليمي</td><td><span class="pill red">ساخن</span></td><td>كفالة تعليم الأيتام</td><td>خطاب + متابعة</td></tr><tr><td><b>شركة غذائية نموذجية</b><div class="small">حائل</div></td><td>غذائي</td><td><span class="pill gold">دافئ</span></td><td>السلال الغذائية</td><td>زيارة تعريفية</td></tr><tr><td><b>شركة تقنية واعدة</b><div class="small">الرياض</div></td><td>تقني</td><td><span class="pill blue">جديد</span></td><td>نادي رفاق القيمي</td><td>بناء علاقة</td></tr></table></div>
-<section class="section" id="projects"><h2>المشاريع</h2></section>
-<div class="grid three"><div class="project"><span class="pill gold">تعليمي</span><h3>كفالة تعليم الأيتام</h3><p class="small">120 مستفيد — عام دراسي</p><b>180,000 ر.س</b><div class="progress"><i style="width:14%"></i></div><p class="small">المتبقي: 155,000 ر.س</p></div><div class="project"><span class="pill green">غذائي</span><h3>السلال الغذائية للأسر</h3><p class="small">250 مستفيد — 3 أشهر</p><b>95,000 ر.س</b><div class="progress"><i style="width:0%"></i></div><p class="small">المتبقي: 95,000 ر.س</p></div><div class="project"><span class="pill blue">تنموي</span><h3>نادي رفاق القيمي</h3><p class="small">80 مستفيد — 6 أشهر</p><b>150,000 ر.س</b><div class="progress"><i style="width:20%"></i></div><p class="small">المتبقي: 120,000 ر.س</p></div></div>
-<section class="section" id="support"><h2>الدعومات السابقة</h2></section>
-<div class="table"><table><tr><th>الجهة</th><th>المشروع</th><th>المبلغ</th><th>التاريخ</th><th>الأثر</th></tr><tr><td>مؤسسة مانحة تعليمية</td><td>كفالة تعليم الأيتام</td><td>60,000 ر.س</td><td>01/10/2025</td><td><span class="pill red">يحتاج تقرير أثر</span></td></tr></table></div>
-<section class="section" id="advisor"><h2>مستشار الدعم الذكي</h2></section>
-<div class="grid two"><div class="card white"><h3>أفضل مطابقة الآن</h3><p><b>مؤسسة مانحة تعليمية ← كفالة تعليم الأيتام</b></p><p class="small">سبب الترشيح: توافق مجال الدعم مع التعليم + وجود دعم سابق + قابلية إصدار تقرير أثر.</p><span class="pill green">ملاءمة 90%</span></div><div class="card white"><h3>اقتراح الإجراء</h3><p>إرسال تقرير أثر مختصر أولًا، ثم خطاب تجديد دعم بمبلغ مقترح 100,000 ر.س.</p></div></div>
-<section class="section" id="today"><h2>ماذا أفعل اليوم؟</h2></section>
-<div class="grid three"><div class="card white"><span class="pill red">عالية</span><h3>مراجعة الرادار التلقائي</h3><p class="small">افتح auto-radar.html واعتمد الفرص المناسبة.</p></div><div class="card white"><span class="pill red">عالية</span><h3>إرسال تقرير أثر</h3><p class="small">إلى مؤسسة مانحة تعليمية قبل طلب دعم جديد.</p></div><div class="card white"><span class="pill blue">متوسطة</span><h3>تواصل تعريفي</h3><p class="small">مع شركة تقنية واعدة لعرض نادي رفاق القيمي.</p></div></div>
-<section class="section" id="portfolio"><h2>محفظة المشاريع</h2></section>
-<div class="card white"><p>رابط المحفظة العام:</p><input value="https://refaq-art.github.io/smart-donor-platform/#portfolio" readonly onclick="this.select()"><p class="small">يمكن مشاركة هذا الرابط مع الجهات المانحة للاطلاع على المشاريع.</p></div>
-<section class="section" id="letters"><h2>الخطابات</h2></section>
-<textarea>السلام عليكم ورحمة الله وبركاته
-
-سعادة/ الجهة المانحة المحترمين
-
-يسر جمعية رفاق أن تعرض عليكم فرصة دعم أحد مشاريعها النوعية، ونأمل منكم دراسة إمكانية الدعم أو الشراكة، ويسعدنا تزويدكم بملف تفصيلي للمشروع.
-
-وتفضلوا بقبول خالص الشكر والتقدير.</textarea>
-<section class="section" id="impact"><h2>تقارير الأثر</h2></section>
-<textarea>تقرير أثر مختصر
-
-الداعم: مؤسسة مانحة تعليمية
-المشروع: كفالة تعليم الأيتام
-عدد المستفيدين: 120
-
-الأثر:
-ساهم دعمكم في تعزيز استقرار المسار التعليمي للأيتام ورفع جودة الخدمة المقدمة لهم.
-
-شكرًا لدعمكم وعطائكم.</textarea>
-</main>
+<div class="card">
+<h2>المرحلة التالية</h2>
+<p class="small">نقل ملف الفرص العام بالكامل إلى Firestore أو Cloud Function حتى لا يوجد أي ملف JSON عام، ثم ربط الرادار التلقائي مباشرة بقاعدة بيانات الجمعيات.</p>
 </div>
-</body></html>
+</section>
+<div class="footer">smart-donor-platform</div>
+</div>
+</body>
+</html>
