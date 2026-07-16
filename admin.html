@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>لوحة مدير المنصة</title>
 <style>
-:root{--brand:#0f766e;--dark:#102522;--gold:#b8892d;--bg:#f7f2e9;--card:#fffaf1;--line:#e4dac8;--text:#142b27;--muted:#66746f;--red:#b42318;--green:#087443;--blue:#175cd3}*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#e9fff8,#f7f2e9);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;color:var(--text)}.wrap{max-width:1180px;margin:auto;padding:22px}.hero{background:linear-gradient(135deg,#102522,#0f766e);color:white;border-radius:30px;padding:28px;margin-bottom:18px}.hero p{color:#dff4ef;line-height:1.8}.grid{display:grid;gap:14px}.cards{grid-template-columns:repeat(4,1fr)}.two{grid-template-columns:1fr 1fr}.card{background:rgba(255,250,241,.96);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 14px 36px rgba(14,37,34,.08)}.stat span{color:var(--muted);font-weight:700}.stat b{display:block;color:var(--brand);font-size:31px;margin-top:6px}.small{font-size:13px;color:var(--muted);line-height:1.8}.pill{display:inline-flex;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#e7f5f2;color:var(--brand);margin:3px}.red{background:#fee4e2;color:var(--red)}.green{background:#e7f8ef;color:var(--green)}.gold{background:#fff1d6;color:#8a5b00}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}button,a.btn{border:0;background:var(--brand);color:white;border-radius:14px;padding:10px 14px;font-weight:800;text-decoration:none;cursor:pointer}.secondary{background:white!important;color:var(--text)!important;border:1px solid var(--line)!important}.danger{background:var(--red)!important}.table{overflow:auto;border-radius:18px;border:1px solid var(--line);background:white}table{width:100%;border-collapse:collapse;min-width:780px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}th{background:#fffcf6;color:var(--muted);font-size:13px}@media(max-width:850px){.wrap{padding:14px}.cards,.two{grid-template-columns:1fr}table{min-width:720px}}
+:root{--brand:#0f766e;--dark:#102522;--gold:#b8892d;--bg:#f7f2e9;--card:#fffaf1;--line:#e4dac8;--text:#142b27;--muted:#66746f;--red:#b42318;--green:#087443;--blue:#175cd3}*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#e9fff8,#f7f2e9);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;color:var(--text)}.wrap{max-width:1180px;margin:auto;padding:22px}.hero{background:linear-gradient(135deg,#102522,#0f766e);color:white;border-radius:30px;padding:28px;margin-bottom:18px}.hero p{color:#dff4ef;line-height:1.8}.grid{display:grid;gap:14px}.cards{grid-template-columns:repeat(4,1fr)}.two{grid-template-columns:1fr 1fr}.card{background:rgba(255,250,241,.96);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 14px 36px rgba(14,37,34,.08)}.stat span{color:var(--muted);font-weight:700}.stat b{display:block;color:var(--brand);font-size:31px;margin-top:6px}.small{font-size:13px;color:var(--muted);line-height:1.8}.pill{display:inline-flex;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#e7f5f2;color:var(--brand);margin:3px}.red{background:#fee4e2;color:var(--red)}.green{background:#e7f8ef;color:var(--green)}.gold{background:#fff1d6;color:#8a5b00}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}button,a.btn{border:0;background:var(--brand);color:white;border-radius:14px;padding:10px 14px;font-weight:800;text-decoration:none;cursor:pointer}.secondary{background:white!important;color:var(--text)!important;border:1px solid var(--line)!important}.danger{background:var(--red)!important}.table{overflow:auto;border-radius:18px;border:1px solid var(--line);background:white}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}th{background:#fffcf6;color:var(--muted);font-size:13px}.notice{background:#fff1d6;color:#8a5b00;border:1px solid #f1d08a;border-radius:18px;padding:14px;margin-bottom:16px}@media(max-width:850px){.wrap{padding:14px}.cards,.two{grid-template-columns:1fr}table{min-width:900px}}
 </style>
 </head>
 <body>
@@ -13,9 +13,10 @@
 <section class="hero">
 <span class="pill gold">Admin</span>
 <h1>لوحة مدير المنصة</h1>
-<p>هذه الصفحة مخصصة للمدير فقط: <b id="adminEmail">Mshary307@gmail.com</b>. تعرض الجمعيات المسجلة ومؤشرات الاستخدام، وتسمح بمتابعة حالة الجمعيات.</p>
-<div class="actions"><a class="btn secondary" href="app.html?v=2">لوحة الجمعية</a><a class="btn secondary" href="login-firebase.html?v=11">تسجيل الدخول</a><button class="danger" id="logout">خروج</button></div>
+<p>هذه الصفحة مخصصة للمدير فقط: <b id="adminEmail">Mshary307@gmail.com</b>. تعرض الجمعيات المسجلة ومؤشرات الاستخدام وتساعدك في حل مشاكل الدخول بطريقة آمنة.</p>
+<div class="actions"><a class="btn secondary" href="app.html?v=2">لوحة الجمعية</a><a class="btn secondary" href="login-firebase.html?v=12">تسجيل الدخول</a><button class="danger" id="logout">خروج</button></div>
 </section>
+<div class="notice"><b>مهم:</b> كلمات المرور لا يمكن عرضها أو استرجاعها من Firebase لأي شخص، حتى المدير. الحل الآمن هو إرسال رابط إعادة تعيين كلمة المرور إلى بريد الجمعية.</div>
 <div id="status" class="card">جاري التحقق من صلاحية المدير...</div>
 <div id="admin" style="display:none">
   <div class="grid cards">
@@ -27,22 +28,22 @@
   <br>
   <div class="card">
     <h2>الجمعيات المسجلة</h2>
-    <p class="small">في النسخة الحالية يتم عرض بيانات الجمعيات إذا كانت قواعد Firestore تسمح للمدير بالقراءة.</p>
-    <div class="table"><table><thead><tr><th>الجمعية</th><th>البريد</th><th>الترخيص</th><th>المدينة</th><th>المسؤول</th><th>الحالة</th></tr></thead><tbody id="orgRows"></tbody></table></div>
+    <p class="small">يمكنك الاطلاع على إيميلات الجمعيات وإرسال رابط إعادة تعيين كلمة المرور عند وجود مشكلة دخول.</p>
+    <div class="table"><table><thead><tr><th>الجمعية</th><th>البريد</th><th>الترخيص</th><th>المدينة</th><th>المسؤول</th><th>الحالة</th><th>الدخول</th></tr></thead><tbody id="orgRows"></tbody></table></div>
   </div>
 </div>
 </div>
 <script src="firebase-config.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
-import { getAuth,onAuthStateChanged,signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+import { getAuth,onAuthStateChanged,signOut,sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
 import { getFirestore,collection,getDocs } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 const ADMIN_EMAIL='mshary307@gmail.com';
 const app=initializeApp(window.FIREBASE_CONFIG); const auth=getAuth(app); const db=getFirestore(app);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 document.getElementById('logout').onclick=()=>signOut(auth);
 onAuthStateChanged(auth,async user=>{
-  if(!user){location.href='login-firebase.html?v=11&next=admin';return}
+  if(!user){location.href='login-firebase.html?v=12&next=admin';return}
   if((user.email||'').toLowerCase()!==ADMIN_EMAIL){document.getElementById('status').innerHTML='<b>غير مصرح</b><br>هذا الحساب ليس مدير المنصة.';return}
   document.getElementById('status').style.display='none'; document.getElementById('admin').style.display='block';
   try{await loadAdmin()}catch(e){document.getElementById('status').style.display='block';document.getElementById('status').innerHTML='تم التعرف عليك كمدير، لكن قواعد Firestore الحالية لا تسمح بقراءة جميع الجمعيات بعد. انسخ قواعد firestore.rules الجديدة إلى Firebase ثم اضغط Publish.<br><br><b>الخطأ:</b> '+esc(e.message)}
@@ -51,10 +52,12 @@ async function countSub(uid,name){try{const s=await getDocs(collection(db,'organ
 async function loadAdmin(){
   const snap=await getDocs(collection(db,'organizations'));
   const rows=[]; let pc=0,dc=0,oc=0;
-  for(const d of snap.docs){const o={id:d.id,...d.data()}; const p=await countSub(d.id,'projects'), dn=await countSub(d.id,'donors'), op=await countSub(d.id,'opportunities'); pc+=p; dc+=dn; oc+=op; rows.push(`<tr><td><b>${esc(o.org||'بدون اسم')}</b></td><td>${esc(o.email||'')}</td><td>${esc(o.license||'-')}</td><td>${esc(o.city||'-')}</td><td>${esc(o.manager||'-')}</td><td><span class="pill green">نشط</span></td></tr>`)}
+  for(const d of snap.docs){const o={id:d.id,...d.data()}; const p=await countSub(d.id,'projects'), dn=await countSub(d.id,'donors'), op=await countSub(d.id,'opportunities'); pc+=p; dc+=dn; oc+=op; const email=esc(o.email||''); rows.push(`<tr><td><b>${esc(o.org||'بدون اسم')}</b></td><td>${email}</td><td>${esc(o.license||'-')}</td><td>${esc(o.city||'-')}</td><td>${esc(o.manager||'-')}</td><td><span class="pill green">نشط</span></td><td><button class="secondary" onclick="copyEmail('${email}')">نسخ البريد</button> <button onclick="resetFor('${email}')">إرسال رابط إعادة تعيين</button></td></tr>`)}
   document.getElementById('orgCount').textContent=snap.size; document.getElementById('projectCount').textContent=pc; document.getElementById('donorCount').textContent=dc; document.getElementById('oppCount').textContent=oc;
-  document.getElementById('orgRows').innerHTML=rows.join('')||'<tr><td colspan="6">لا توجد جمعيات بعد.</td></tr>';
+  document.getElementById('orgRows').innerHTML=rows.join('')||'<tr><td colspan="7">لا توجد جمعيات بعد.</td></tr>';
 }
+window.copyEmail=function(email){navigator.clipboard&&navigator.clipboard.writeText(email);alert('تم نسخ البريد: '+email)}
+window.resetFor=async function(email){if(!email){alert('لا يوجد بريد');return} if(!confirm('إرسال رابط إعادة تعيين كلمة المرور إلى '+email+'؟'))return; try{await sendPasswordResetEmail(auth,email); alert('تم إرسال رابط إعادة تعيين كلمة المرور إلى '+email)}catch(e){alert('تعذر الإرسال: '+(e.message||e.code))}}
 </script>
 </body>
 </html>
