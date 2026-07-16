@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>تسجيل دخول الجمعيات - Firebase</title>
 <style>
-:root{--brand:#0f766e;--dark:#102522;--gold:#b8892d;--bg:#f7f2e9;--card:#fffaf1;--line:#e4dac8;--text:#142b27;--muted:#66746f;--red:#b42318;--green:#087443;--blue:#175cd3}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(135deg,#e8fff7,#f7f2e9);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;color:var(--text)}.wrap{max-width:1120px;margin:auto;padding:24px}.hero{background:linear-gradient(135deg,#102522,#0f766e);color:white;border-radius:30px;padding:28px;margin-bottom:18px;box-shadow:0 18px 45px rgba(0,0,0,.13)}.hero p{color:#def5f0;line-height:1.8}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:rgba(255,250,241,.96);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 14px 36px rgba(14,37,34,.08)}label{font-weight:800;display:block;margin-top:12px}input,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:6px;font:inherit;background:white}textarea{min-height:90px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}button,a.btn{border:0;background:var(--brand);color:white;border-radius:14px;padding:11px 15px;font-weight:800;text-decoration:none;cursor:pointer}.secondary{background:white!important;color:var(--text)!important;border:1px solid var(--line)!important}.danger{background:var(--red)!important}.pill{display:inline-flex;border-radius:999px;padding:6px 10px;background:#e7f5f2;color:var(--brand);font-size:12px;font-weight:800}.small{font-size:13px;color:var(--muted);line-height:1.8}.hidden{display:none}.dash{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.stat b{display:block;font-size:30px;color:var(--brand);margin-top:6px}.success{background:#e7f8ef;color:var(--green);padding:12px;border-radius:14px;margin-top:12px}.error{background:#fee4e2;color:var(--red);padding:12px;border-radius:14px;margin-top:12px}.warn{background:#fff1d6;color:#8a5b00;padding:12px;border-radius:14px;margin-top:12px}.mono{direction:ltr;text-align:left;font-family:ui-monospace,Consolas,monospace;font-size:12px;white-space:pre-wrap}@media(max-width:850px){.grid,.dash{grid-template-columns:1fr}.wrap{padding:14px}}
+:root{--brand:#0f766e;--dark:#102522;--gold:#b8892d;--bg:#f7f2e9;--card:#fffaf1;--line:#e4dac8;--text:#142b27;--muted:#66746f;--red:#b42318;--green:#087443;--blue:#175cd3}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(135deg,#e8fff7,#f7f2e9);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;color:var(--text)}.wrap{max-width:1120px;margin:auto;padding:24px}.hero{background:linear-gradient(135deg,#102522,#0f766e);color:white;border-radius:30px;padding:28px;margin-bottom:18px;box-shadow:0 18px 45px rgba(0,0,0,.13)}.hero p{color:#def5f0;line-height:1.8}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:rgba(255,250,241,.96);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 14px 36px rgba(14,37,34,.08)}label{font-weight:800;display:block;margin-top:12px}input,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:6px;font:inherit;background:white}textarea{min-height:90px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}button,a.btn{border:0;background:var(--brand);color:white;border-radius:14px;padding:11px 15px;font-weight:800;text-decoration:none;cursor:pointer}.secondary{background:white!important;color:var(--text)!important;border:1px solid var(--line)!important}.danger{background:var(--red)!important}.goldbtn{background:var(--gold)!important}.pill{display:inline-flex;border-radius:999px;padding:6px 10px;background:#e7f5f2;color:var(--brand);font-size:12px;font-weight:800}.small{font-size:13px;color:var(--muted);line-height:1.8}.hidden{display:none}.dash{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.stat b{display:block;font-size:30px;color:var(--brand);margin-top:6px}.success{background:#e7f8ef;color:var(--green);padding:12px;border-radius:14px;margin-top:12px}.error{background:#fee4e2;color:var(--red);padding:12px;border-radius:14px;margin-top:12px}.warn{background:#fff1d6;color:#8a5b00;padding:12px;border-radius:14px;margin-top:12px}.mono{direction:ltr;text-align:left;font-family:ui-monospace,Consolas,monospace;font-size:12px;white-space:pre-wrap}@media(max-width:850px){.grid,.dash{grid-template-columns:1fr}.wrap{padding:14px}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <section class="hero">
 <h1>تسجيل الجمعيات عبر Firebase</h1>
-<p>هذه صفحة تسجيل دخول حقيقية تستخدم Firebase Authentication وCloud Firestore. بعد وضع إعدادات Firebase في ملف firebase-config.js وتفعيل Email/Password ستعمل الحسابات بين الأجهزة وليست محلية فقط.</p>
-<div class="actions"><a class="btn secondary" href="./?v=firebase-auth">العودة للمنصة</a><a class="btn secondary" href="auto-radar.html?v=2">الرادار التلقائي</a></div>
+<p>هذه صفحة تسجيل دخول حقيقية تستخدم Firebase Authentication وCloud Firestore. بعد الدخول استخدم لوحة الجمعية الذكية لإدارة المشاريع والداعمين والدعومات والفرص والمهام والخطابات وتقارير الأثر.</p>
+<div class="actions"><a class="btn secondary" href="./?v=firebase-auth">الواجهة العامة</a><a class="btn goldbtn" href="app.html?v=1">لوحة الجمعية الذكية</a><a class="btn secondary" href="auto-radar.html?v=2">الرادار التلقائي</a></div>
 </section>
 <div id="configWarning" class="warn hidden">لم يتم ضبط firebase-config.js بعد. افتح الملف وضع إعدادات Firebase Web App.</div>
 <div id="authArea" class="grid">
@@ -37,7 +37,7 @@
 <div id="loginMsg"></div>
 <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
 <h3>حالة الربط</h3>
-<p class="small">البيانات تحفظ في Firestore داخل مسار organizations/{user.uid}، وقواعد العزل موجودة في ملف firestore.rules.</p>
+<p class="small">البيانات تحفظ في Firestore داخل مسار organizations/{user.uid}، وتظهر في لوحة الجمعية الذكية بعد الدخول.</p>
 </div>
 </div>
 <div id="dashboard" class="hidden">
@@ -53,11 +53,12 @@
 <br>
 <div class="grid">
 <div class="card"><h3>بيانات الجمعية</h3><label>اسم الجمعية<input id="profileOrg"></label><label>رقم الترخيص<input id="profileLicense"></label><label>المدينة<input id="profileCity"></label><label>المسؤول<input id="profileManager"></label><label>نبذة<textarea id="profileAbout"></textarea></label><div class="actions"><button onclick="saveProfile()">حفظ التعديل</button></div><div id="profileMsg"></div></div>
-<div class="card"><h3>روابط العمل</h3><div class="actions"><a class="btn" href="auto-radar.html?v=2">فتح الرادار التلقائي</a><a class="btn" href="opportunities.json" target="_blank">ملف الفرص</a><a class="btn secondary" href="./#portfolio">محفظة المشاريع</a><a class="btn secondary" href="./#letters">الخطابات</a></div><p class="small">الخطوة اللاحقة: نقل المشاريع والداعمين إلى مجموعات فرعية داخل organizations/{uid}.</p></div>
+<div class="card"><h3>روابط العمل</h3><div class="actions"><a class="btn goldbtn" href="app.html?v=1">فتح لوحة الجمعية الذكية</a><a class="btn" href="auto-radar.html?v=2">فتح الرادار التلقائي</a><a class="btn secondary" href="opportunities.json" target="_blank">ملف الفرص</a><a class="btn secondary" href="./#portfolio">محفظة المشاريع العامة</a></div><p class="small">اللوحة الذكية تحفظ المشاريع والداعمين والدعومات والفرص والمهام داخل Firestore لكل جمعية.</p></div>
 </div>
 </div>
 <div class="card" style="margin-top:16px"><h3>ملفات تم تجهيزها</h3><pre class="mono">firebase-config.js
 login-firebase.html
+app.html
 firestore.rules</pre></div>
 </div>
 <script src="firebase-config.js"></script>
@@ -65,72 +66,21 @@ firestore.rules</pre></div>
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
-
 let app, auth, db;
 const cfg = window.FIREBASE_CONFIG || {};
 const configured = cfg.apiKey && !String(cfg.apiKey).includes('PASTE_');
-if (!configured) {
-  document.getElementById('configWarning').classList.remove('hidden');
-} else {
-  app = initializeApp(cfg);
-  auth = getAuth(app);
-  db = getFirestore(app);
-  onAuthStateChanged(auth, async (user) => {
-    if (user) await showDashboard(user);
-    else showAuth();
-  });
-}
-
+if (!configured) { document.getElementById('configWarning').classList.remove('hidden'); } else { app = initializeApp(cfg); auth = getAuth(app); db = getFirestore(app); onAuthStateChanged(auth, async (user) => { if (user) await showDashboard(user); else showAuth(); }); }
 function msg(id,text,type='success'){document.getElementById(id).innerHTML='<div class="'+type+'">'+text+'</div>'}
 function val(id){return document.getElementById(id).value.trim()}
 function showAuth(){document.getElementById('authArea').classList.remove('hidden');document.getElementById('dashboard').classList.add('hidden')}
-async function loadProfile(user){
-  const snap = await getDoc(doc(db,'organizations',user.uid));
-  return snap.exists() ? snap.data() : {email:user.email, org:'', license:'', city:'', manager:'', about:''};
-}
-async function showDashboard(user){
-  const p = await loadProfile(user);
-  document.getElementById('authArea').classList.add('hidden');document.getElementById('dashboard').classList.remove('hidden');
-  document.getElementById('orgTitle').textContent=p.org||'جمعية بدون اسم';
-  document.getElementById('orgMeta').textContent='البريد: '+user.email+' — الترخيص: '+(p.license||'-')+' — المدينة: '+(p.city||'-');
-  document.getElementById('profileOrg').value=p.org||'';document.getElementById('profileLicense').value=p.license||'';document.getElementById('profileCity').value=p.city||'';document.getElementById('profileManager').value=p.manager||'';document.getElementById('profileAbout').value=p.about||'';
-  fetch('opportunities.json?v='+Date.now()).then(r=>r.json()).then(d=>{document.getElementById('oppCount').textContent=(d.items||[]).length}).catch(()=>{document.getElementById('oppCount').textContent='—'});
-}
-
-window.registerOrg = async function(){
-  if(!configured){msg('regMsg','أضف إعدادات Firebase أولًا في firebase-config.js','error');return}
-  const org=val('regOrg'), license=val('regLicense'), city=val('regCity'), manager=val('regManager'), email=val('regEmail').toLowerCase(), pass=document.getElementById('regPass').value, about=val('regAbout');
-  if(!org||!email||!pass){msg('regMsg','أدخل اسم الجمعية والبريد وكلمة المرور.','error');return}
-  try{
-    const cred = await createUserWithEmailAndPassword(auth,email,pass);
-    await setDoc(doc(db,'organizations',cred.user.uid),{org,license,city,manager,email,about,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
-    msg('regMsg','تم إنشاء الحساب بنجاح.','success');
-  }catch(e){msg('regMsg',translateError(e),'error')}
-}
-window.loginOrg = async function(){
-  if(!configured){msg('loginMsg','أضف إعدادات Firebase أولًا في firebase-config.js','error');return}
-  try{await signInWithEmailAndPassword(auth,val('loginEmail').toLowerCase(),document.getElementById('loginPass').value)}catch(e){msg('loginMsg',translateError(e),'error')}
-}
-window.resetPassword = async function(){
-  if(!configured){msg('loginMsg','أضف إعدادات Firebase أولًا في firebase-config.js','error');return}
-  const email=val('loginEmail').toLowerCase(); if(!email){msg('loginMsg','اكتب البريد أولًا.','error');return}
-  try{await sendPasswordResetEmail(auth,email);msg('loginMsg','تم إرسال رابط استعادة كلمة المرور.','success')}catch(e){msg('loginMsg',translateError(e),'error')}
-}
+async function loadProfile(user){const snap = await getDoc(doc(db,'organizations',user.uid));return snap.exists() ? snap.data() : {email:user.email, org:'', license:'', city:'', manager:'', about:''};}
+async function showDashboard(user){const p = await loadProfile(user);document.getElementById('authArea').classList.add('hidden');document.getElementById('dashboard').classList.remove('hidden');document.getElementById('orgTitle').textContent=p.org||'جمعية بدون اسم';document.getElementById('orgMeta').textContent='البريد: '+user.email+' — الترخيص: '+(p.license||'-')+' — المدينة: '+(p.city||'-');document.getElementById('profileOrg').value=p.org||'';document.getElementById('profileLicense').value=p.license||'';document.getElementById('profileCity').value=p.city||'';document.getElementById('profileManager').value=p.manager||'';document.getElementById('profileAbout').value=p.about||'';fetch('opportunities.json?v='+Date.now()).then(r=>r.json()).then(d=>{document.getElementById('oppCount').textContent=(d.items||[]).length}).catch(()=>{document.getElementById('oppCount').textContent='—'});}
+window.registerOrg = async function(){if(!configured){msg('regMsg','أضف إعدادات Firebase أولًا في firebase-config.js','error');return}const org=val('regOrg'), license=val('regLicense'), city=val('regCity'), manager=val('regManager'), email=val('regEmail').toLowerCase(), pass=document.getElementById('regPass').value, about=val('regAbout');if(!org||!email||!pass){msg('regMsg','أدخل اسم الجمعية والبريد وكلمة المرور.','error');return}try{const cred = await createUserWithEmailAndPassword(auth,email,pass);await setDoc(doc(db,'organizations',cred.user.uid),{org,license,city,manager,email,about,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});msg('regMsg','تم إنشاء الحساب بنجاح. يمكنك فتح لوحة الجمعية الذكية.','success');setTimeout(()=>location.href='app.html?v=1',700)}catch(e){msg('regMsg',translateError(e),'error')}}
+window.loginOrg = async function(){if(!configured){msg('loginMsg','أضف إعدادات Firebase أولًا في firebase-config.js','error');return}try{await signInWithEmailAndPassword(auth,val('loginEmail').toLowerCase(),document.getElementById('loginPass').value);setTimeout(()=>location.href='app.html?v=1',500)}catch(e){msg('loginMsg',translateError(e),'error')}}
+window.resetPassword = async function(){if(!configured){msg('loginMsg','أضف إعدادات Firebase أولًا في firebase-config.js','error');return}const email=val('loginEmail').toLowerCase(); if(!email){msg('loginMsg','اكتب البريد أولًا.','error');return}try{await sendPasswordResetEmail(auth,email);msg('loginMsg','تم إرسال رابط استعادة كلمة المرور.','success')}catch(e){msg('loginMsg',translateError(e),'error')}}
 window.logoutOrg = async function(){await signOut(auth)}
-window.saveProfile = async function(){
-  if(!auth.currentUser)return;
-  const data={org:val('profileOrg'),license:val('profileLicense'),city:val('profileCity'),manager:val('profileManager'),about:val('profileAbout'),email:auth.currentUser.email,updatedAt:serverTimestamp()};
-  try{await setDoc(doc(db,'organizations',auth.currentUser.uid),data,{merge:true});msg('profileMsg','تم حفظ بيانات الجمعية.','success');await showDashboard(auth.currentUser)}catch(e){msg('profileMsg',translateError(e),'error')}
-}
-function translateError(e){
-  const code=e.code||'';
-  if(code.includes('email-already-in-use'))return'البريد مستخدم مسبقًا.';
-  if(code.includes('invalid-email'))return'صيغة البريد غير صحيحة.';
-  if(code.includes('weak-password'))return'كلمة المرور ضعيفة.';
-  if(code.includes('invalid-credential')||code.includes('wrong-password'))return'بيانات الدخول غير صحيحة.';
-  if(code.includes('permission-denied'))return'صلاحيات Firestore تمنع العملية. تحقق من القواعد.';
-  return e.message||'حدث خطأ غير معروف.';
-}
+window.saveProfile = async function(){if(!auth.currentUser)return;const data={org:val('profileOrg'),license:val('profileLicense'),city:val('profileCity'),manager:val('profileManager'),about:val('profileAbout'),email:auth.currentUser.email,updatedAt:serverTimestamp()};try{await setDoc(doc(db,'organizations',auth.currentUser.uid),data,{merge:true});msg('profileMsg','تم حفظ بيانات الجمعية.','success');await showDashboard(auth.currentUser)}catch(e){msg('profileMsg',translateError(e),'error')}}
+function translateError(e){const code=e.code||'';if(code.includes('email-already-in-use'))return'البريد مستخدم مسبقًا.';if(code.includes('invalid-email'))return'صيغة البريد غير صحيحة.';if(code.includes('weak-password'))return'كلمة المرور ضعيفة.';if(code.includes('invalid-credential')||code.includes('wrong-password'))return'بيانات الدخول غير صحيحة.';if(code.includes('permission-denied'))return'صلاحيات Firestore تمنع العملية. تحقق من القواعد.';return e.message||'حدث خطأ غير معروف.';}
 if(!configured) showAuth();
 </script>
 </body>
