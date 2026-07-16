@@ -14,7 +14,7 @@
 <span class="pill gold">Admin</span>
 <h1>لوحة مدير المنصة</h1>
 <p>هذه الصفحة مخصصة للمدير فقط: <b id="adminEmail">Mshary307@gmail.com</b>. تعرض الجمعيات المسجلة ومؤشرات الاستخدام وتساعدك في حل مشاكل الدخول بطريقة آمنة.</p>
-<div class="actions"><a class="btn secondary" href="app.html?v=2">لوحة الجمعية</a><a class="btn secondary" href="login-firebase.html?v=12">تسجيل الدخول</a><button class="danger" id="logout">خروج</button></div>
+<div class="actions"><a class="btn secondary" href="app.html?v=2">لوحة الجمعية</a><a class="btn secondary" href="login-firebase.html?v=13">تسجيل الدخول</a><button class="danger" id="logout">خروج</button></div>
 </section>
 <div class="notice"><b>مهم:</b> كلمات المرور لا يمكن عرضها أو استرجاعها من Firebase لأي شخص، حتى المدير. الحل الآمن هو إرسال رابط إعادة تعيين كلمة المرور إلى بريد الجمعية.</div>
 <div id="status" class="card">جاري التحقق من صلاحية المدير...</div>
@@ -43,11 +43,13 @@ const app=initializeApp(window.FIREBASE_CONFIG); const auth=getAuth(app); const 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 document.getElementById('logout').onclick=()=>signOut(auth);
 onAuthStateChanged(auth,async user=>{
-  if(!user){location.href='login-firebase.html?v=12&next=admin';return}
-  if((user.email||'').toLowerCase()!==ADMIN_EMAIL){document.getElementById('status').innerHTML='<b>غير مصرح</b><br>هذا الحساب ليس مدير المنصة.';return}
+  if(!user){location.href='login-firebase.html?v=13&next=admin';return}
+  const currentEmail=(user.email||'').trim().toLowerCase();
+  if(currentEmail!==ADMIN_EMAIL){document.getElementById('status').innerHTML='<b>غير مصرح</b><br>الحساب الحالي ليس مدير المنصة.<br><br><b>الحساب الحالي:</b> '+esc(user.email||'غير معروف')+'<br><b>حساب المدير المطلوب:</b> Mshary307@gmail.com<br><br><button class="danger" onclick="window.forceAdminLogout()">تسجيل خروج والدخول بحساب المدير</button>';return}
   document.getElementById('status').style.display='none'; document.getElementById('admin').style.display='block';
   try{await loadAdmin()}catch(e){document.getElementById('status').style.display='block';document.getElementById('status').innerHTML='تم التعرف عليك كمدير، لكن قواعد Firestore الحالية لا تسمح بقراءة جميع الجمعيات بعد. انسخ قواعد firestore.rules الجديدة إلى Firebase ثم اضغط Publish.<br><br><b>الخطأ:</b> '+esc(e.message)}
 });
+window.forceAdminLogout=async function(){await signOut(auth); location.href='login-firebase.html?v=13&next=admin'}
 async function countSub(uid,name){try{const s=await getDocs(collection(db,'organizations',uid,name));return s.size}catch(e){return 0}}
 async function loadAdmin(){
   const snap=await getDocs(collection(db,'organizations'));
