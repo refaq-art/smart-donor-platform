@@ -1,0 +1,192 @@
+// مخطط قاعدة البيانات لمنصة إدارة مشاريع ومنح الجمعيات الخيرية
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// الأدوار المتاحة (كسلسلة نصية لأن SQLite لا يدعم enum):
+// ADMIN = مدير النظام | ORG_MANAGER = مدير الجمعية
+// GRANTS_OFFICER = مسؤول المنح | REVIEWER = مراجع
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("GRANTS_OFFICER")
+  isDemo       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  createdProjects      Project[]                  @relation("ProjectCreatedBy")
+  assignedApplications GrantApplication[]          @relation("ApplicationAssignedTo")
+  createdApplications  GrantApplication[]          @relation("ApplicationCreatedBy")
+  statusChanges        ApplicationStatusHistory[]
+  activityLogs         ActivityLog[]
+}
+
+model Organization {
+  id          String  @id @default(cuid())
+  name        String
+  about       String?
+  city        String?
+  phone       String?
+  email       String?
+  website     String?
+  regNumber   String?
+  accentColor String  @default("#0f766e")
+  isDemo      Boolean @default(false)
+}
+
+model Project {
+  id                  String    @id @default(cuid())
+  title               String
+  category            String?
+  problemStatement    String?
+  generalObjective    String?
+  specificObjectives  String? // JSON string[]
+  beneficiaryCategory String?
+  beneficiaryCount    Int?
+  geographicScope     String?
+  activities          String? // JSON string[]
+  outputs             String? // JSON string[]
+  outcomes            String? // JSON string[]
+  kpis                String? // JSON [{indicator, target}]
+  timelineStart       DateTime?
+  timelineEnd         DateTime?
+  budgetTotal         Float?
+  budgetBreakdown     String? // JSON [{item, amount}]
+  status              String    @default("مسودة") // مسودة / نشط / مؤرشف
+  isDemo              Boolean   @default(false)
+  duplicatedFromId    String?
+  createdById         String
+  createdBy           User      @relation("ProjectCreatedBy", fields: [createdById], references: [id])
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  attachments   Attachment[]
+  applications  GrantApplication[]
+  opportunities FundingOpportunity[]
+}
+
+model Donor {
+  id                String   @id @default(cuid())
+  name              String
+  type              String? // شركة / مؤسسة مانحة / جهة حكومية / فرد
+  supportFields     String? // مجالات الدعم
+  fundingConditions String?
+  contactName       String?
+  phone             String?
+  email             String?
+  city              String?
+  relationshipStatus String  @default("محتمل") // محتمل / نشط / متوقف
+  notes             String?
+  isDemo            Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  opportunities FundingOpportunity[]
+  attachments   Attachment[]
+}
+
+model FundingOpportunity {
+  id                String   @id @default(cuid())
+  title             String
+  donorId           String?
+  donor             Donor?   @relation(fields: [donorId], references: [id])
+  donorNameFreeText String?
+  field             String?
+  expectedAmount    Float?
+  requirements      String?
+  startDate         DateTime?
+  deadline          DateTime?
+  applicationUrl    String?
+  status            String   @default("مفتوحة") // مفتوحة / تحت المتابعة / مغلقة
+  projectId         String?
+  project           Project? @relation(fields: [projectId], references: [id])
+  isDemo            Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  applications GrantApplication[]
+}
+
+model GrantApplication {
+  id                 String   @id @default(cuid())
+  title              String
+  projectId          String
+  project            Project  @relation(fields: [projectId], references: [id])
+  opportunityId      String?
+  opportunity        FundingOpportunity? @relation(fields: [opportunityId], references: [id])
+
+  executiveSummary   String?
+  orgIntroduction    String?
+  problemStatement   String?
+  justification      String?
+  objectives         String?
+  beneficiaries      String?
+  implementationPlan String?
+  activities         String?
+  outputs            String?
+  outcomes           String?
+  kpis               String?
+  riskManagement     String?
+  sustainability     String?
+  timeline           String?
+  budget             String?
+  donorRequirements  String?
+
+  status       String   @default("مسودة")
+  isDemo       Boolean  @default(false)
+  assignedToId String?
+  assignedTo   User?    @relation("ApplicationAssignedTo", fields: [assignedToId], references: [id])
+  createdById  String
+  createdBy    User     @relation("ApplicationCreatedBy", fields: [createdById], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  statusHistory ApplicationStatusHistory[]
+  attachments   Attachment[]
+}
+
+model ApplicationStatusHistory {
+  id            String   @id @default(cuid())
+  applicationId String
+  application   GrantApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fromStatus    String?
+  toStatus      String
+  note          String?
+  nextStep      String?
+  changedById   String?
+  changedBy     User?    @relation(fields: [changedById], references: [id])
+  createdAt     DateTime @default(now())
+}
+
+model Attachment {
+  id            String   @id @default(cuid())
+  filename      String
+  storedName    String
+  url           String
+  mimeType      String
+  size          Int
+  projectId     String?
+  project       Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  applicationId String?
+  application   GrantApplication? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  donorId       String?
+  donor         Donor?            @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  uploadedAt    DateTime @default(now())
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  details    String?
+  createdAt  DateTime @default(now())
+}

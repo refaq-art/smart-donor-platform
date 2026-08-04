@@ -1,2 +1,0 @@
-إذا لم تظهر التحديثات، اجعل GitHub Pages يستخدم branch main و folder /root.
-آخر نسخة متكاملة موجودة في main.
