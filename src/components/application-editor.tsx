@@ -155,20 +155,24 @@ export default function ApplicationEditor({
               ))}
             </div>
 
-            <div className="space-y-5 p-5">
-              {TABS.find((t) => t.id === activeTab)?.fields.map((key) => (
-                <FieldBlock
-                  key={key}
-                  fieldKey={key}
-                  value={fields[key]}
-                  onChange={set(key)}
-                  fields={fields}
-                  projectContext={projectContext}
-                  selectedOpportunity={selectedOpportunity}
-                  readOnly={readOnly}
-                />
-              ))}
-            </div>
+            {TABS.map((tab) => (
+              // كل الأقسام تبقى مُركَّبة في الـ DOM دائمًا (وليس فقط القسم النشط) حتى تُرسَل
+              // قيمها جميعًا ضمن الفورم عند الحفظ، بغض النظر عن التبويب الظاهر حاليًا.
+              <div key={tab.id} hidden={activeTab !== tab.id} className="space-y-5 p-5">
+                {tab.fields.map((key) => (
+                  <FieldBlock
+                    key={key}
+                    fieldKey={key}
+                    value={fields[key]}
+                    onChange={set(key)}
+                    fields={fields}
+                    projectContext={projectContext}
+                    selectedOpportunity={selectedOpportunity}
+                    readOnly={readOnly}
+                  />
+                ))}
+              </div>
+            ))}
           </div>
 
           {!readOnly && (
