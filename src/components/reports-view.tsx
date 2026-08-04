@@ -59,13 +59,13 @@ export default function ReportsView({
   function exportActive() {
     if (active === "projects") {
       downloadCsv(
-        "تقرير_المشاريع.csv",
+        "projects-report.csv",
         ["اسم المشروع", "الفئة", "الحالة", "الميزانية", "تاريخ الإنشاء"],
         projects.map((p) => [String(p.title), String(p.category || ""), String(p.status), Number(p.budgetTotal || 0), formatDate(p.createdAt as string)])
       );
     } else if (active === "opportunities") {
       downloadCsv(
-        "تقرير_فرص_التمويل.csv",
+        "funding-opportunities-report.csv",
         ["العنوان", "الجهة", "المجال", "القيمة المتوقعة", "الموعد النهائي", "الحالة"],
         opportunities.map((o) => [
           String(o.title),
@@ -78,7 +78,7 @@ export default function ReportsView({
       );
     } else if (active === "sent") {
       downloadCsv(
-        "تقرير_الطلبات_المرسلة.csv",
+        "submitted-applications-report.csv",
         ["عنوان الطلب", "المشروع", "الجهة المانحة", "الحالة", "آخر تحديث"],
         sentApplications.map((a) => [
           String(a.title),
@@ -90,7 +90,7 @@ export default function ReportsView({
       );
     } else if (active === "acceptance") {
       downloadCsv(
-        "تقرير_نسب_القبول.csv",
+        "acceptance-rate-report.csv",
         ["المؤشر", "القيمة"],
         [
           ["الطلبات المقبولة", acceptedCount],
@@ -100,25 +100,25 @@ export default function ReportsView({
       );
     } else if (active === "donors") {
       downloadCsv(
-        "تقرير_الجهات_المانحة.csv",
+        "donors-report.csv",
         ["اسم الجهة", "النوع", "مجالات الدعم", "حالة العلاقة", "عدد الفرص"],
         donors.map((d) => [String(d.name), String(d.type || ""), String(d.supportFields || ""), String(d.relationshipStatus), Number((d._count as AnyRecord)?.opportunities || 0)])
       );
     } else if (active === "deadlines") {
       downloadCsv(
-        "تقرير_المواعيد_النهائية.csv",
+        "deadlines-report.csv",
         ["الفرصة", "الجهة", "الموعد النهائي", "الحالة"],
         upcomingSorted.map((o) => [String(o.title), String((o.donor as AnyRecord)?.name || o.donorNameFreeText || ""), formatDate(o.deadline as string), String(o.status)])
       );
     } else if (active === "budgets") {
       downloadCsv(
-        "تقرير_الميزانيات.csv",
+        "budgets-report.csv",
         ["المشروع", "إجمالي الميزانية"],
         projects.map((p) => [String(p.title), Number(p.budgetTotal || 0)])
       );
     } else if (active === "staff") {
       downloadCsv(
-        "تقرير_أداء_الموظفين.csv",
+        "staff-performance-report.csv",
         ["الاسم", "الدور", "طلبات أنشأها", "طلبات مسندة إليه"],
         users.map((u) => [String(u.name), String(u.role), Number((u._count as AnyRecord)?.createdApplications || 0), Number((u._count as AnyRecord)?.assignedApplications || 0)])
       );
