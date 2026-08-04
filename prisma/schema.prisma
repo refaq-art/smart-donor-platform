@@ -1,6 +1,7 @@
 // مخطط قاعدة البيانات لمنصة إدارة مشاريع ومنح الجمعيات الخيرية
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
