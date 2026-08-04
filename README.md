@@ -259,35 +259,33 @@ npx playwright install chromium
 
 ### خطوات النشر
 
-1. **إنشاء قاعدة بيانات Turso**: أنشئ حسابًا مجانيًا على [turso.tech](https://turso.tech) (تسجيل عبر GitHub متاح)، ثم أنشئ قاعدة بيانات جديدة. انسخ قيمتي **Database URL** (تبدأ بـ `libsql://`) و **Auth Token** الظاهرتين مباشرة.
+1. **إنشاء قاعدة بيانات Turso**: أنشئ حسابًا مجانيًا على [turso.tech](https://turso.tech) (تسجيل عبر GitHub متاح)، ثم أنشئ قاعدة بيانات جديدة. انسخ قيمتي **Database URL** (تبدأ بـ `libsql://`) و **Auth Token**.
 
-2. **مزامنة المخطط مع Turso** (مرة واحدة، ومرة أخرى بعد أي تعديل مستقبلي على `prisma/schema.prisma`):
-   ```bash
-   DATABASE_URL="libsql://<اسم-قاعدتك>.turso.io?authToken=<التوكن>" npx prisma db push
-   ```
+2. **استيراد المشروع في Vercel**: من [vercel.com](https://vercel.com) اختر "Add New Project" واربط مستودع GitHub هذا. يكتشف Vercel أنه مشروع Next.js تلقائيًا.
 
-3. **تعبئة بيانات تجريبية على Turso** (اختياري، لتجربة المنصة مباشرة بعد النشر):
-   ```bash
-   DATABASE_URL="libsql://<اسم-قاعدتك>.turso.io?authToken=<التوكن>" npx tsx prisma/seed.ts
-   ```
+3. **إنشاء مخزن Vercel Blob**: من تبويب Storage داخل مشروع Vercel، أنشئ "Blob Store" واربطه بالمشروع — سيضيف Vercel متغير `BLOB_READ_WRITE_TOKEN` تلقائيًا.
 
-4. **استيراد المشروع في Vercel**: من [vercel.com](https://vercel.com) اختر "Add New Project" واربط مستودع GitHub هذا. يكتشف Vercel أنه مشروع Next.js تلقائيًا.
-
-5. **إنشاء مخزن Vercel Blob**: من تبويب Storage داخل مشروع Vercel، أنشئ "Blob Store" واربطه بالمشروع — سيضيف Vercel متغير `BLOB_READ_WRITE_TOKEN` تلقائيًا.
-
-6. **ضبط متغيرات البيئة** في إعدادات المشروع على Vercel (Settings → Environment Variables):
+4. **ضبط متغيرات البيئة** في إعدادات المشروع على Vercel (Settings → Environment Variables):
    ```
    TURSO_DATABASE_URL=libsql://<اسم-قاعدتك>.turso.io
    TURSO_AUTH_TOKEN=<التوكن>
    AUTH_SECRET=<قيمة عشوائية طويلة، مثل ناتج openssl rand -base64 32>
    AI_PROVIDER=mock
+   BOOTSTRAP_SECRET=<قيمة عشوائية مؤقتة، لمرة واحدة>
    ```
-   (لا حاجة لضبط `DATABASE_URL` أو `BLOB_READ_WRITE_TOKEN` يدويًا — الأول غير مُستخدم في وضع Turso، والثاني يُضاف تلقائيًا من خطوة 5.)
+   (لا حاجة لضبط `DATABASE_URL` أو `BLOB_READ_WRITE_TOKEN` يدويًا — الأول غير مُستخدم في وضع Turso، والثاني يُضاف تلقائيًا من خطوة 3.)
 
-7. **النشر**: اضغط Deploy. عند اكتمال البناء ستكون المنصة متاحة على رابط `https://<اسم-مشروعك>.vercel.app` مجانًا بالكامل.
+5. **النشر**: اضغط Deploy. عند اكتمال البناء ستكون المنصة متاحة على رابط `https://<اسم-مشروعك>.vercel.app`.
+
+6. **تهيئة قاعدة البيانات لمرة واحدة**: قاعدة Turso فارغة (بلا جداول) بعد الإنشاء مباشرة — استدعِ نقطة التهيئة المدمجة مرة واحدة بعد أول نشر لإنشاء الجداول وتعبئة بيانات تجريبية:
+   ```bash
+   curl -X POST https://<اسم-مشروعك>.vercel.app/api/admin/bootstrap \
+     -H "x-bootstrap-secret: <نفس-قيمة-BOOTSTRAP_SECRET>"
+   ```
+   هذه النقطة آمنة لإعادة الاستدعاء: تُنشئ الجداول فقط إن لم تكن موجودة، ولا تُعبّئ بيانات تجريبية إن وُجدت بيانات حقيقية بالفعل (تتحقق أولًا من أن جدول المستخدمين فارغ). بعد التنفيذ الناجح، يمكن حذف `BOOTSTRAP_SECRET` من متغيرات البيئة على Vercel لتعطيل النقطة تمامًا.
 
 ### تحديثات لاحقة
-أي `git push` إلى `main` يُعيد نشر المنصة تلقائيًا على Vercel. عند تعديل `prisma/schema.prisma` كرر الخطوة 2 لمزامنة المخطط الجديد مع Turso قبل أو بعد النشر.
+أي `git push` إلى `main` يُعيد نشر المنصة تلقائيًا على Vercel. عند إضافة حقول أو جداول جديدة مستقبلًا لـ `prisma/schema.prisma`، أعد توليد `src/lib/turso-init-sql.ts` بنفس الأمر الموضح داخل الملف، ثم استدعِ `/api/admin/bootstrap` مجددًا (بعد إعادة ضبط `BOOTSTRAP_SECRET`) لتطبيق الجداول الجديدة فقط.
 
 ---
 
