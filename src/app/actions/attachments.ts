@@ -1,11 +1,9 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { saveUploadedFile } from "@/lib/upload-file";
+import { saveUploadedFile, deleteUploadedFile } from "@/lib/upload-file";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { unlink } from "fs/promises";
-import path from "path";
 
 export type UploadFormState = { error?: string; success?: boolean } | null;
 
@@ -56,12 +54,7 @@ export async function deleteAttachmentAction(id: string, revalidateTarget: strin
   if (!attachment) return;
 
   await prisma.attachment.delete({ where: { id } });
-
-  try {
-    await unlink(path.join(process.cwd(), "public", "uploads", attachment.storedName));
-  } catch {
-    // الملف غير موجود على القرص، لا بأس بالمتابعة
-  }
+  await deleteUploadedFile(attachment.storedName, attachment.url);
 
   revalidatePath(revalidateTarget);
 }
