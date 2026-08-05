@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/ui-bits";
 import { createApplicationAction } from "@/app/actions/applications";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -11,13 +11,14 @@ export default async function NewApplicationPage({
 }: {
   searchParams: Promise<{ projectId?: string; opportunityId?: string }>;
 }) {
-  const session = await getSession();
+  const session = await requireSession();
   if (!canEdit(session?.role)) redirect("/applications");
   const sp = await searchParams;
 
   const [projects, opportunities] = await Promise.all([
-    prisma.project.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true } }),
+    prisma.project.findMany({ where: { organizationId: session.organizationId }, orderBy: { title: "asc" }, select: { id: true, title: true } }),
     prisma.fundingOpportunity.findMany({
+      where: { organizationId: session.organizationId },
       orderBy: { title: "asc" },
       select: { id: true, title: true, projectId: true, donor: { select: { name: true } }, donorNameFreeText: true },
     }),

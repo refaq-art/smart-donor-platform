@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { PageHeader, StatCard, Badge, EmptyState, ProgressBar } from "@/components/ui-bits";
 import { STATUS_COLORS, OPPORTUNITY_STATUS_COLORS } from "@/lib/constants";
 import { computeCompletion } from "@/lib/completion";
@@ -8,7 +8,8 @@ import { formatDate, daysUntil } from "@/lib/utils";
 import { FolderKanban, Target, FileText, CheckCircle2, XCircle, Clock, AlertTriangle, Plus } from "lucide-react";
 
 export default async function DashboardPage() {
-  const session = await getSession();
+  const session = await requireSession();
+  const orgWhere = { organizationId: session.organizationId };
 
   const now = new Date();
   const soon = new Date();
@@ -25,25 +26,26 @@ export default async function DashboardPage() {
     inProgressApps,
     recentApplications,
   ] = await Promise.all([
-    prisma.project.count(),
-    prisma.fundingOpportunity.count({ where: { status: "مفتوحة" } }),
-    prisma.grantApplication.count({ where: { status: { in: ["مسودة", "تحت المراجعة الداخلية", "جاهز للإرسال"] } } }),
-    prisma.grantApplication.count({ where: { status: "تم الإرسال" } }),
-    prisma.grantApplication.count({ where: { status: "مقبول" } }),
-    prisma.grantApplication.count({ where: { status: "مرفوض" } }),
+    prisma.project.count({ where: orgWhere }),
+    prisma.fundingOpportunity.count({ where: { ...orgWhere, status: "مفتوحة" } }),
+    prisma.grantApplication.count({ where: { ...orgWhere, status: { in: ["مسودة", "تحت المراجعة الداخلية", "جاهز للإرسال"] } } }),
+    prisma.grantApplication.count({ where: { ...orgWhere, status: "تم الإرسال" } }),
+    prisma.grantApplication.count({ where: { ...orgWhere, status: "مقبول" } }),
+    prisma.grantApplication.count({ where: { ...orgWhere, status: "مرفوض" } }),
     prisma.fundingOpportunity.findMany({
-      where: { status: { not: "مغلقة" }, deadline: { gte: now, lte: soon } },
+      where: { ...orgWhere, status: { not: "مغلقة" }, deadline: { gte: now, lte: soon } },
       orderBy: { deadline: "asc" },
       take: 6,
       include: { donor: true },
     }),
     prisma.grantApplication.findMany({
-      where: { status: { notIn: ["مقبول", "مرفوض", "مؤجل"] } },
+      where: { ...orgWhere, status: { notIn: ["مقبول", "مرفوض", "مؤجل"] } },
       include: { project: true },
       orderBy: { updatedAt: "desc" },
       take: 8,
     }),
     prisma.grantApplication.findMany({
+      where: orgWhere,
       orderBy: { updatedAt: "desc" },
       take: 5,
       include: { project: true },

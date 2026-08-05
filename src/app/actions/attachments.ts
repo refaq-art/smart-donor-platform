@@ -2,7 +2,13 @@
 
 import { prisma } from "@/lib/prisma";
 import { saveUploadedFile, deleteUploadedFile } from "@/lib/upload-file";
-import { getSession } from "@/lib/auth";
+import {
+  requireSessionOrThrow,
+  requireOwnedProject,
+  requireOwnedApplication,
+  requireOwnedDonor,
+  audit,
+} from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 
 export type UploadFormState = { error?: string; success?: boolean } | null;
@@ -13,8 +19,17 @@ export async function uploadAttachmentAction(
   _prev: UploadFormState,
   formData: FormData
 ): Promise<UploadFormState> {
-  const session = await getSession();
-  if (!session) return { error: "الرجاء تسجيل الدخول" };
+  let session;
+  try {
+    session = await requireSessionOrThrow();
+    // التأكد أن السجل الهدف يخص جمعية المستخدم قبل إرفاق أي ملف به
+    if (target.projectId) await requireOwnedProject(target.projectId);
+    else if (target.applicationId) await requireOwnedApplication(target.applicationId);
+    else if (target.donorId) await requireOwnedDonor(target.donorId);
+    else return { error: "لم يُحدَّد السجل المرتبط بالمرفق" };
+  } catch {
+    return { error: "غير مصرَّح بالوصول إلى هذا السجل" };
+  }
 
   const file = formData.get("file") as File | null;
   if (!file) return { error: "الرجاء اختيار ملف" };
@@ -35,22 +50,31 @@ export async function uploadAttachmentAction(
     },
   });
 
-  await prisma.activityLog.create({
-    data: {
-      userId: session.userId,
-      action: "upload_attachment",
-      entityType: target.projectId ? "Project" : target.applicationId ? "GrantApplication" : "Donor",
-      entityId: target.projectId || target.applicationId || target.donorId || "",
-      details: outcome.filename,
-    },
-  });
+  await audit(
+    session,
+    "upload_attachment",
+    target.projectId ? "Project" : target.applicationId ? "GrantApplication" : "Donor",
+    target.projectId || target.applicationId || target.donorId || "",
+    outcome.filename
+  );
 
   revalidatePath(revalidateTarget);
   return { success: true };
 }
 
 export async function deleteAttachmentAction(id: string, revalidateTarget: string) {
-  const attachment = await prisma.attachment.findUnique({ where: { id } });
+  const session = await requireSessionOrThrow();
+  // التحقق من ملكية الجمعية عبر السجل الأب قبل الحذف
+  const attachment = await prisma.attachment.findFirst({
+    where: {
+      id,
+      OR: [
+        { project: { organizationId: session.organizationId } },
+        { application: { organizationId: session.organizationId } },
+        { donor: { organizationId: session.organizationId } },
+      ],
+    },
+  });
   if (!attachment) return;
 
   await prisma.attachment.delete({ where: { id } });

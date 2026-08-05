@@ -50,7 +50,7 @@ export default async function LoginPage({
           </div>
           <h1 className="text-2xl font-black text-ink">تسجيل الدخول</h1>
           <p className="page-subtitle mb-6">أدخل بيانات حسابك للمتابعة إلى المنصة</p>
-          <LoginForm next={next} />
+          <LoginForm next={next} showDemoAccounts={process.env.SHOW_DEMO_ACCOUNTS === "true"} />
         </div>
       </div>
     </div>

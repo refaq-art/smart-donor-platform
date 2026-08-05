@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit } from "@/lib/roles";
 import { PageHeader } from "@/components/ui-bits";
 import ProjectForm from "@/components/project-form";
@@ -9,10 +9,10 @@ import { parseJsonArray, parseKpis, parseBudgetItems } from "@/lib/utils";
 
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession();
+  const session = await requireSession();
   if (!canEdit(session?.role)) redirect(`/projects/${id}`);
 
-  const project = await prisma.project.findUnique({ where: { id } });
+  const project = await prisma.project.findFirst({ where: { id, organizationId: session!.organizationId } });
   if (!project) notFound();
 
   const toDateInput = (d?: Date | null) => (d ? d.toISOString().slice(0, 10) : undefined);

@@ -13,39 +13,134 @@ datasource db {
 }
 
 // الأدوار المتاحة (كسلسلة نصية لأن SQLite لا يدعم enum):
-// ADMIN = مدير النظام | ORG_MANAGER = مدير الجمعية
-// GRANTS_OFFICER = مسؤول المنح | REVIEWER = مراجع
+// ADMIN = مدير النظام | ORG_MANAGER = مدير الجمعية | GRANTS_OFFICER = مسؤول المنح
+// REVIEWER = مراجع | FINANCE_REVIEWER = مراجع مالي
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         String   @default("GRANTS_OFFICER")
-  isDemo       Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  id                 String       @id @default(cuid())
+  name               String
+  email              String       @unique
+  passwordHash       String
+  role               String       @default("GRANTS_OFFICER")
+  organizationId     String
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  isActive           Boolean      @default(true)
+  // يُجبر المستخدم على تغيير كلمة المرور عند أول دخول (الحسابات المُنشأة بواسطة المدير)
+  mustChangePassword Boolean      @default(false)
+  lastLoginAt        DateTime?
+  // إبطال الجلسات: أي جلسة صدرت قبل هذا التاريخ تُرفض
+  sessionsValidFrom  DateTime     @default(now())
+  isDemo             Boolean      @default(false)
+  createdAt          DateTime     @default(now())
 
   createdProjects      Project[]                  @relation("ProjectCreatedBy")
-  assignedApplications GrantApplication[]          @relation("ApplicationAssignedTo")
-  createdApplications  GrantApplication[]          @relation("ApplicationCreatedBy")
+  assignedApplications GrantApplication[]         @relation("ApplicationAssignedTo")
+  createdApplications  GrantApplication[]         @relation("ApplicationCreatedBy")
   statusChanges        ApplicationStatusHistory[]
   activityLogs         ActivityLog[]
+  comments             ApplicationComment[]
+  uploadedDocuments    OrgDocument[]
+
+  @@index([organizationId])
 }
 
+// ملف الجمعية المركزي — مصدر واحد للحقيقة لبيانات الجمعية، تُستورد منه بيانات
+// طلبات المنح تلقائيًا بدل إعادة إدخالها في كل طلب.
 model Organization {
   id          String  @id @default(cuid())
   name        String
   about       String?
-  city        String?
-  phone       String?
-  email       String?
-  website     String?
-  regNumber   String?
   accentColor String  @default("#0f766e")
   isDemo      Boolean @default(false)
+
+  // بيانات الترخيص
+  regNumber       String?
+  licenseDate     DateTime?
+  licenseExpiry   DateTime?
+  supervisingBody String? // الجهة المشرفة
+  foundedAt       DateTime?
+
+  // النشاط والنطاق
+  sector          String? // مجال الجمعية
+  geographicScope String?
+  city            String?
+  strategicGoals  String? // JSON string[]
+
+  // التواصل
+  phone   String?
+  email   String?
+  website String?
+  address String?
+
+  // المفوض
+  delegateName  String?
+  delegateRole  String?
+  delegatePhone String?
+  delegateEmail String?
+
+  // المالية
+  bankName     String?
+  iban         String?
+  annualBudget Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  projects      Project[]
+  donors        Donor[]
+  opportunities FundingOpportunity[]
+  applications  GrantApplication[]
+  documents     OrgDocument[]
+  boardMembers  BoardMember[]
+  activityLogs  ActivityLog[]
+}
+
+// أعضاء مجلس الإدارة والفريق التنفيذي
+model BoardMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  position       String?
+  // BOARD = مجلس إدارة | EXECUTIVE = فريق تنفيذي
+  memberType     String       @default("BOARD")
+  phone          String?
+  email          String?
+  isDemo         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+}
+
+// مكتبة المستندات المركزية — مستند واحد يُعاد استخدامه في عدة طلبات، مع تتبع الصلاحية
+model OrgDocument {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String
+  // التصنيف: ترخيص، قوائم مالية، خطة استراتيجية، شهادة حوكمة، تقرير سنوي، أخرى...
+  category       String
+  filename       String
+  storedName     String
+  url            String
+  mimeType       String
+  size           Int
+  issueDate      DateTime?
+  expiryDate     DateTime?
+  notes          String?
+  uploadedById   String?
+  uploadedBy     User?        @relation(fields: [uploadedById], references: [id])
+  isDemo         Boolean      @default(false)
+  uploadedAt     DateTime     @default(now())
+
+  @@index([organizationId])
+  @@index([category])
 }
 
 model Project {
-  id                  String    @id @default(cuid())
+  id                  String       @id @default(cuid())
+  organizationId      String
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   title               String
   category            String?
   problemStatement    String?
@@ -62,13 +157,13 @@ model Project {
   timelineEnd         DateTime?
   budgetTotal         Float?
   budgetBreakdown     String? // JSON [{item, amount}]
-  status              String    @default("مسودة") // مسودة / نشط / مؤرشف
-  isDemo              Boolean   @default(false)
+  status              String       @default("مسودة") // مسودة / نشط / مؤرشف
+  isDemo              Boolean      @default(false)
   duplicatedFromId    String?
   createdById         String
-  createdBy           User      @relation("ProjectCreatedBy", fields: [createdById], references: [id])
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  createdBy           User         @relation("ProjectCreatedBy", fields: [createdById], references: [id])
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   attachments   Attachment[]
   applications  GrantApplication[]
@@ -76,30 +171,34 @@ model Project {
 }
 
 model Donor {
-  id                String   @id @default(cuid())
-  name              String
-  type              String? // شركة / مؤسسة مانحة / جهة حكومية / فرد
-  supportFields     String? // مجالات الدعم
-  fundingConditions String?
-  contactName       String?
-  phone             String?
-  email             String?
-  city              String?
-  relationshipStatus String  @default("محتمل") // محتمل / نشط / متوقف
-  notes             String?
-  isDemo            Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                 String       @id @default(cuid())
+  organizationId     String
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name               String
+  type               String? // شركة / مؤسسة مانحة / جهة حكومية / فرد
+  supportFields      String? // مجالات الدعم
+  fundingConditions  String?
+  contactName        String?
+  phone              String?
+  email              String?
+  city               String?
+  relationshipStatus String       @default("محتمل") // محتمل / نشط / متوقف
+  notes              String?
+  isDemo             Boolean      @default(false)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
   opportunities FundingOpportunity[]
   attachments   Attachment[]
 }
 
 model FundingOpportunity {
-  id                String   @id @default(cuid())
+  id                String       @id @default(cuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   title             String
   donorId           String?
-  donor             Donor?   @relation(fields: [donorId], references: [id])
+  donor             Donor?       @relation(fields: [donorId], references: [id])
   donorNameFreeText String?
   field             String?
   expectedAmount    Float?
@@ -107,23 +206,26 @@ model FundingOpportunity {
   startDate         DateTime?
   deadline          DateTime?
   applicationUrl    String?
-  status            String   @default("مفتوحة") // مفتوحة / تحت المتابعة / مغلقة
+  status            String       @default("مفتوحة") // مفتوحة / تحت المتابعة / مغلقة
   projectId         String?
-  project           Project? @relation(fields: [projectId], references: [id])
-  isDemo            Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  project           Project?     @relation(fields: [projectId], references: [id])
+  isDemo            Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
   applications GrantApplication[]
+  criteria     EligibilityCriterion[]
 }
 
 model GrantApplication {
-  id                 String   @id @default(cuid())
-  title              String
-  projectId          String
-  project            Project  @relation(fields: [projectId], references: [id])
-  opportunityId      String?
-  opportunity        FundingOpportunity? @relation(fields: [opportunityId], references: [id])
+  id             String              @id @default(cuid())
+  organizationId String
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String
+  projectId      String
+  project        Project             @relation(fields: [projectId], references: [id])
+  opportunityId  String?
+  opportunity    FundingOpportunity? @relation(fields: [opportunityId], references: [id])
 
   executiveSummary   String?
   orgIntroduction    String?
@@ -153,10 +255,12 @@ model GrantApplication {
 
   statusHistory ApplicationStatusHistory[]
   attachments   Attachment[]
+  comments      ApplicationComment[]
+  versions      ApplicationVersion[]
 }
 
 model ApplicationStatusHistory {
-  id            String   @id @default(cuid())
+  id            String           @id @default(cuid())
   applicationId String
   application   GrantApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   fromStatus    String?
@@ -164,12 +268,12 @@ model ApplicationStatusHistory {
   note          String?
   nextStep      String?
   changedById   String?
-  changedBy     User?    @relation(fields: [changedById], references: [id])
-  createdAt     DateTime @default(now())
+  changedBy     User?            @relation(fields: [changedById], references: [id])
+  createdAt     DateTime         @default(now())
 }
 
 model Attachment {
-  id            String   @id @default(cuid())
+  id            String            @id @default(cuid())
   filename      String
   storedName    String
   url           String
@@ -181,16 +285,87 @@ model Attachment {
   application   GrantApplication? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   donorId       String?
   donor         Donor?            @relation(fields: [donorId], references: [id], onDelete: Cascade)
-  uploadedAt    DateTime @default(now())
+  uploadedAt    DateTime          @default(now())
 }
 
 model ActivityLog {
-  id         String   @id @default(cuid())
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id])
-  action     String
-  entityType String
-  entityId   String
-  details    String?
-  createdAt  DateTime @default(now())
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id])
+  action         String
+  entityType     String
+  entityId       String
+  details        String?
+  createdAt      DateTime      @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// محرك أهلية المنح
+// ─────────────────────────────────────────────────────────────────────────────
+
+// شرط أهلية مرتبط بفرصة تمويل. القواعد قابلة للإضافة والتعديل من الواجهة
+// دون أي تعديل في الكود — كل شرط يحدد "مفتاحًا" يُقيَّم آليًا مقابل بيانات
+// الجمعية/المشروع، أو يكون تحققًا يدويًا يؤكده المستخدم.
+model EligibilityCriterion {
+  id               String             @id @default(cuid())
+  opportunityId    String
+  opportunity      FundingOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  // مفتاح الشرط، مثل: ORG_AGE_YEARS, ORG_SECTOR, BENEFICIARY_COUNT,
+  // PROJECT_BUDGET, SELF_CONTRIBUTION_PCT, ADMIN_COST_PCT, HAS_DOCUMENT, MANUAL
+  ruleKey          String
+  label            String
+  // عامل المقارنة: GTE, LTE, EQ, IN, EXISTS, BOOLEAN
+  operator         String
+  // القيمة المرجعية (نص أو رقم أو قائمة مفصولة بفواصل حسب العامل)
+  value            String?
+  // للشروط من نوع HAS_DOCUMENT: تصنيف المستند المطلوب
+  documentCategory String?
+  // إلزامي = عدم استيفائه يعني "غير مؤهل"؛ غير إلزامي = "مؤهل بشروط"
+  isMandatory      Boolean            @default(true)
+  notes            String?
+  isDemo           Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+
+  @@index([opportunityId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// المراجعة والتعليقات
+// ─────────────────────────────────────────────────────────────────────────────
+
+// تعليق مرتبط بحقل محدد داخل طلب المنحة (أو تعليق عام إذا كان fieldKey فارغًا)
+model ApplicationComment {
+  id            String           @id @default(cuid())
+  applicationId String
+  application   GrantApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  // مفتاح الحقل الذي يعلّق عليه المراجع (مثل executiveSummary)، أو null لتعليق عام
+  fieldKey      String?
+  body          String
+  // OPEN = مفتوح | RESOLVED = تمت المعالجة
+  status        String           @default("OPEN")
+  // CHANGE_REQUEST = طلب تعديل | NOTE = ملاحظة
+  kind          String           @default("NOTE")
+  authorId      String
+  author        User             @relation(fields: [authorId], references: [id])
+  resolvedAt    DateTime?
+  isDemo        Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+
+  @@index([applicationId])
+}
+
+// لقطة من محتوى الطلب عند كل حفظ مهم — تتيح مقارنة الإصدارات واستعادتها
+model ApplicationVersion {
+  id            String           @id @default(cuid())
+  applicationId String
+  application   GrantApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  // كامل محتوى أقسام الطلب وقت الحفظ كـ JSON
+  snapshot      String
+  createdById   String?
+  label         String?
+  createdAt     DateTime         @default(now())
+
+  @@index([applicationId])
 }

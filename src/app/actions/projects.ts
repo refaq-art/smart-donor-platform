@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
-import { canEdit as canEditRole, canDelete as canDeleteRole } from "@/lib/roles";
+import { requireOwnedProject, requirePermission, audit, AuthzError } from "@/lib/authz";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -63,19 +62,21 @@ export async function createProjectAction(
   _prev: ProjectFormState,
   formData: FormData
 ): Promise<ProjectFormState> {
-  const session = await getSession();
-  if (!session || !canEditRole(session.role)) return { error: "ليست لديك صلاحية لإنشاء مشروع" };
+  let session;
+  try {
+    session = await requirePermission("editRecords");
+  } catch (e) {
+    return { error: e instanceof AuthzError ? e.message : "غير مصرَّح" };
+  }
 
   const result = buildData(formData);
   if ("error" in result) return { error: result.error };
 
   const project = await prisma.project.create({
-    data: { ...result.data, createdById: session.userId },
+    data: { ...result.data, createdById: session.userId, organizationId: session.organizationId },
   });
 
-  await prisma.activityLog.create({
-    data: { userId: session.userId, action: "create", entityType: "Project", entityId: project.id },
-  });
+  await audit(session, "create", "Project", project.id);
 
   redirect(`/projects/${project.id}`);
 }
@@ -85,27 +86,26 @@ export async function updateProjectAction(
   _prev: ProjectFormState,
   formData: FormData
 ): Promise<ProjectFormState> {
-  const session = await getSession();
-  if (!session || !canEditRole(session.role)) return { error: "ليست لديك صلاحية لتعديل هذا المشروع" };
+  let session;
+  try {
+    await requirePermission("editRecords");
+    ({ session } = await requireOwnedProject(id));
+  } catch (e) {
+    return { error: e instanceof AuthzError ? e.message : "غير مصرَّح" };
+  }
 
   const result = buildData(formData);
   if ("error" in result) return { error: result.error };
 
   await prisma.project.update({ where: { id }, data: result.data });
-
-  await prisma.activityLog.create({
-    data: { userId: session.userId, action: "update", entityType: "Project", entityId: id },
-  });
+  await audit(session, "update", "Project", id);
 
   redirect(`/projects/${id}`);
 }
 
 export async function duplicateProjectAction(id: string) {
-  const session = await getSession();
-  if (!session || !canEditRole(session.role)) return;
-
-  const original = await prisma.project.findUnique({ where: { id } });
-  if (!original) return;
+  await requirePermission("editRecords");
+  const { project: original, session } = await requireOwnedProject(id);
 
   const copy = await prisma.project.create({
     data: {
@@ -128,25 +128,21 @@ export async function duplicateProjectAction(id: string) {
       status: "مسودة",
       duplicatedFromId: original.id,
       createdById: session.userId,
+      organizationId: session.organizationId,
     },
   });
 
-  await prisma.activityLog.create({
-    data: { userId: session.userId, action: "duplicate", entityType: "Project", entityId: copy.id },
-  });
+  await audit(session, "duplicate", "Project", copy.id);
 
   redirect(`/projects/${copy.id}/edit`);
 }
 
 export async function deleteProjectAction(id: string) {
-  const session = await getSession();
-  if (!session || !canDeleteRole(session.role)) return;
+  await requirePermission("deleteRecords");
+  const { session } = await requireOwnedProject(id);
 
   await prisma.project.delete({ where: { id } });
-
-  await prisma.activityLog.create({
-    data: { userId: session.userId, action: "delete", entityType: "Project", entityId: id },
-  });
+  await audit(session, "delete", "Project", id);
 
   revalidatePath("/projects");
   redirect("/projects");

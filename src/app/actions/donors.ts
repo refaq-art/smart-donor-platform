@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
-import { canEdit as canEditRole, canDelete as canDeleteRole } from "@/lib/roles";
+import { requireOwnedDonor, requirePermission, audit, AuthzError } from "@/lib/authz";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -47,16 +46,20 @@ function buildData(formData: FormData) {
 }
 
 export async function createDonorAction(_prev: DonorFormState, formData: FormData): Promise<DonorFormState> {
-  const session = await getSession();
-  if (!session || !canEditRole(session.role)) return { error: "ليست لديك صلاحية لإضافة جهة مانحة" };
+  let session;
+  try {
+    session = await requirePermission("editRecords");
+  } catch (e) {
+    return { error: e instanceof AuthzError ? e.message : "غير مصرَّح" };
+  }
 
   const result = buildData(formData);
   if ("error" in result) return { error: result.error };
 
-  const donor = await prisma.donor.create({ data: result.data });
-  await prisma.activityLog.create({
-    data: { userId: session.userId, action: "create", entityType: "Donor", entityId: donor.id },
+  const donor = await prisma.donor.create({
+    data: { ...result.data, organizationId: session.organizationId },
   });
+  await audit(session, "create", "Donor", donor.id);
   redirect(`/donors/${donor.id}`);
 }
 
@@ -65,27 +68,28 @@ export async function updateDonorAction(
   _prev: DonorFormState,
   formData: FormData
 ): Promise<DonorFormState> {
-  const session = await getSession();
-  if (!session || !canEditRole(session.role)) return { error: "ليست لديك صلاحية لتعديل هذه الجهة" };
+  let session;
+  try {
+    await requirePermission("editRecords");
+    ({ session } = await requireOwnedDonor(id));
+  } catch (e) {
+    return { error: e instanceof AuthzError ? e.message : "غير مصرَّح" };
+  }
 
   const result = buildData(formData);
   if ("error" in result) return { error: result.error };
 
   await prisma.donor.update({ where: { id }, data: result.data });
-  await prisma.activityLog.create({
-    data: { userId: session.userId, action: "update", entityType: "Donor", entityId: id },
-  });
+  await audit(session, "update", "Donor", id);
   redirect(`/donors/${id}`);
 }
 
 export async function deleteDonorAction(id: string) {
-  const session = await getSession();
-  if (!session || !canDeleteRole(session.role)) return;
+  await requirePermission("deleteRecords");
+  const { session } = await requireOwnedDonor(id);
 
   await prisma.donor.delete({ where: { id } });
-  await prisma.activityLog.create({
-    data: { userId: session.userId, action: "delete", entityType: "Donor", entityId: id },
-  });
+  await audit(session, "delete", "Donor", id);
   revalidatePath("/donors");
   redirect("/donors");
 }

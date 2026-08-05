@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
-import { canEdit as canEditRole, canDelete as canDeleteRole } from "@/lib/roles";
+import { requireOwnedOpportunity, requirePermission, audit, AuthzError } from "@/lib/authz";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -58,16 +57,20 @@ export async function createOpportunityAction(
   _prev: OpportunityFormState,
   formData: FormData
 ): Promise<OpportunityFormState> {
-  const session = await getSession();
-  if (!session || !canEditRole(session.role)) return { error: "ليست لديك صلاحية لإضافة فرصة تمويل" };
+  let session;
+  try {
+    session = await requirePermission("editRecords");
+  } catch (e) {
+    return { error: e instanceof AuthzError ? e.message : "غير مصرَّح" };
+  }
 
   const result = buildData(formData);
   if ("error" in result) return { error: result.error };
 
-  const opp = await prisma.fundingOpportunity.create({ data: result.data });
-  await prisma.activityLog.create({
-    data: { userId: session.userId, action: "create", entityType: "FundingOpportunity", entityId: opp.id },
+  const opp = await prisma.fundingOpportunity.create({
+    data: { ...result.data, organizationId: session.organizationId },
   });
+  await audit(session, "create", "FundingOpportunity", opp.id);
   redirect(`/opportunities/${opp.id}`);
 }
 
@@ -76,27 +79,28 @@ export async function updateOpportunityAction(
   _prev: OpportunityFormState,
   formData: FormData
 ): Promise<OpportunityFormState> {
-  const session = await getSession();
-  if (!session || !canEditRole(session.role)) return { error: "ليست لديك صلاحية لتعديل هذه الفرصة" };
+  let session;
+  try {
+    await requirePermission("editRecords");
+    ({ session } = await requireOwnedOpportunity(id));
+  } catch (e) {
+    return { error: e instanceof AuthzError ? e.message : "غير مصرَّح" };
+  }
 
   const result = buildData(formData);
   if ("error" in result) return { error: result.error };
 
   await prisma.fundingOpportunity.update({ where: { id }, data: result.data });
-  await prisma.activityLog.create({
-    data: { userId: session.userId, action: "update", entityType: "FundingOpportunity", entityId: id },
-  });
+  await audit(session, "update", "FundingOpportunity", id);
   redirect(`/opportunities/${id}`);
 }
 
 export async function deleteOpportunityAction(id: string) {
-  const session = await getSession();
-  if (!session || !canDeleteRole(session.role)) return;
+  await requirePermission("deleteRecords");
+  const { session } = await requireOwnedOpportunity(id);
 
   await prisma.fundingOpportunity.delete({ where: { id } });
-  await prisma.activityLog.create({
-    data: { userId: session.userId, action: "delete", entityType: "FundingOpportunity", entityId: id },
-  });
+  await audit(session, "delete", "FundingOpportunity", id);
   revalidatePath("/opportunities");
   redirect("/opportunities");
 }

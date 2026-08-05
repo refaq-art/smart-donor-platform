@@ -20,7 +20,13 @@ function SubmitButton() {
   );
 }
 
-export default function LoginForm({ next }: { next?: string }) {
+export default function LoginForm({
+  next,
+  showDemoAccounts = false,
+}: {
+  next?: string;
+  showDemoAccounts?: boolean;
+}) {
   const [state, formAction] = useFormState<LoginState, FormData>(loginAction, null);
   const [email, setEmail] = useState("");
 
@@ -66,6 +72,7 @@ export default function LoginForm({ next }: { next?: string }) {
         <SubmitButton />
       </form>
 
+      {showDemoAccounts && (
       <div className="mt-8 rounded-2xl border border-dashed border-brand-200 bg-brand-50/50 p-4">
         <p className="mb-2 text-xs font-bold text-brand-700">
           حسابات تجريبية (كلمة المرور للجميع: <span dir="ltr">Passw0rd!</span>)
@@ -86,6 +93,7 @@ export default function LoginForm({ next }: { next?: string }) {
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }

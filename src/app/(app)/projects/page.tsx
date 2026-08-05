@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit } from "@/lib/roles";
 import { PageHeader, EmptyState, Badge, Pagination, ProgressBar } from "@/components/ui-bits";
 import { PROJECT_CATEGORIES, PROJECT_STATUSES, PROJECT_STATUS_COLORS } from "@/lib/constants";
@@ -16,10 +16,10 @@ export default async function ProjectsPage({
   searchParams: Promise<{ q?: string; category?: string; status?: string; page?: string }>;
 }) {
   const sp = await searchParams;
-  const session = await getSession();
+  const session = await requireSession();
   const page = Math.max(1, Number(sp.page || 1));
 
-  const where: Prisma.ProjectWhereInput = {};
+  const where: Prisma.ProjectWhereInput = { organizationId: session!.organizationId };
   if (sp.q) {
     where.OR = [
       { title: { contains: sp.q } },
