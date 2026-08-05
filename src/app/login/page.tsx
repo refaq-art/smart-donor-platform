@@ -1,5 +1,6 @@
 import LoginForm from "./login-form";
 import { getSession } from "@/lib/auth";
+import { isSessionUserValid } from "@/lib/authz";
 import { redirect } from "next/navigation";
 
 export default async function LoginPage({
@@ -8,7 +9,10 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const session = await getSession();
-  if (session) redirect("/dashboard");
+  // لا يكفي وجود توقيع JWT صالح لتخطي صفحة الدخول تلقائيًا — إن كان الحساب
+  // معطَّلًا أو تغيّرت جمعيته بعد إصدار الجلسة، يجب إظهار نموذج الدخول بدل
+  // إعادة التوجيه لصفحة محمية سترفضه هي أيضًا (حلقة توجيه لا نهائية).
+  if (session && (await isSessionUserValid(session))) redirect("/dashboard");
   const { next } = await searchParams;
 
   return (
