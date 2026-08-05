@@ -22,14 +22,15 @@ test.describe("عزل بيانات الجمعيات", () => {
     await expect(page.getByText("مشروع جمعية الأمل").first()).toBeVisible();
   });
 
-  test("الوصول المباشر لرابط سجل من جمعية أخرى يُرفض (404)", async ({ page, request }) => {
-    // نلتقط معرّف مشروع من الجمعية الأولى
+  test("الوصول المباشر لرابط سجل من جمعية أخرى يُرفض (404)", async ({ page }) => {
+    // نلتقط معرّف مشروع حقيقي من الجمعية الأولى (مع استبعاد /projects/new)
     await loginAs(page, "officer");
     await page.goto("/projects");
-    const link = page.locator('a[href^="/projects/"]').first();
-    const href = await link.getAttribute("href");
-    expect(href).toBeTruthy();
-    const foreignProjectPath = href!;
+    const hrefs = await page.locator('a[href^="/projects/"]').evaluateAll((els) =>
+      els.map((e) => e.getAttribute("href") || "").filter((h) => /^\/projects\/[^/]+$/.test(h) && !h.endsWith("/new"))
+    );
+    expect(hrefs.length).toBeGreaterThan(0);
+    const foreignProjectPath = hrefs[0];
 
     // تسجيل الخروج ثم الدخول بمستخدم الجمعية الثانية
     await page.goto("/dashboard");
