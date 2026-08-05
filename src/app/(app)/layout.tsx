@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/auth";
+import { getSession, clearSessionCookie } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AppShell from "@/components/app-shell";
@@ -7,7 +7,18 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const org = await prisma.organization.findFirst();
+  // التحقق من أن الحساب لا يزال نشطًا وأن الجلسة لم تُبطَل (بعد تغيير كلمة المرور
+  // أو تعطيل الحساب من قبل المدير) — الجلسة وحدها لا تكفي.
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { isActive: true, mustChangePassword: true, organizationId: true },
+  });
+  if (!currentUser || !currentUser.isActive || currentUser.organizationId !== session.organizationId) {
+    await clearSessionCookie();
+    redirect("/login");
+  }
+
+  const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
 
   const now = new Date();
   const soon = new Date();
@@ -15,9 +26,15 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
 
   const [upcomingDeadlines, missingInfoApps] = await Promise.all([
     prisma.fundingOpportunity.count({
-      where: { status: { not: "مغلقة" }, deadline: { gte: now, lte: soon } },
+      where: {
+        organizationId: session.organizationId,
+        status: { not: "مغلقة" },
+        deadline: { gte: now, lte: soon },
+      },
     }),
-    prisma.grantApplication.count({ where: { status: "مطلوب استكمال" } }),
+    prisma.grantApplication.count({
+      where: { organizationId: session.organizationId, status: "مطلوب استكمال" },
+    }),
   ]);
 
   return (

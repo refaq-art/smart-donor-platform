@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit } from "@/lib/roles";
 import { PageHeader, EmptyState, Badge, Pagination, ProgressBar } from "@/components/ui-bits";
 import { APPLICATION_STATUSES, STATUS_COLORS } from "@/lib/constants";
@@ -17,10 +17,10 @@ export default async function ApplicationsPage({
   searchParams: Promise<{ q?: string; status?: string; page?: string }>;
 }) {
   const sp = await searchParams;
-  const session = await getSession();
+  const session = await requireSession();
   const page = Math.max(1, Number(sp.page || 1));
 
-  const where: Prisma.GrantApplicationWhereInput = {};
+  const where: Prisma.GrantApplicationWhereInput = { organizationId: session!.organizationId };
   if (sp.q) where.title = { contains: sp.q };
   if (sp.status) where.status = sp.status;
 

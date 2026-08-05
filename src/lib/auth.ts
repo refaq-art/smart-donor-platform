@@ -15,6 +15,7 @@ export type SessionPayload = {
   email: string;
   name: string;
   role: string;
+  organizationId: string;
 };
 
 export async function hashPassword(password: string) {
@@ -58,6 +59,7 @@ export async function getSession(): Promise<SessionPayload | null> {
       email: payload.email as string,
       name: payload.name as string,
       role: payload.role as string,
+      organizationId: payload.organizationId as string,
     };
   } catch {
     return null;
@@ -72,6 +74,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       email: payload.email as string,
       name: payload.name as string,
       role: payload.role as string,
+      organizationId: payload.organizationId as string,
     };
   } catch {
     return null;

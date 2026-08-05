@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit } from "@/lib/roles";
 import { PageHeader } from "@/components/ui-bits";
 import OpportunityForm from "@/components/opportunity-form";
@@ -8,13 +8,13 @@ import { updateOpportunityAction } from "@/app/actions/opportunities";
 
 export default async function EditOpportunityPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession();
+  const session = await requireSession();
   if (!canEdit(session?.role)) redirect(`/opportunities/${id}`);
 
   const [opp, donors, projects] = await Promise.all([
-    prisma.fundingOpportunity.findUnique({ where: { id } }),
-    prisma.donor.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    prisma.project.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true } }),
+    prisma.fundingOpportunity.findFirst({ where: { id, organizationId: session!.organizationId } }),
+    prisma.donor.findMany({ where: { organizationId: session.organizationId }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.project.findMany({ where: { organizationId: session.organizationId }, orderBy: { title: "asc" }, select: { id: true, title: true } }),
   ]);
   if (!opp) notFound();
 

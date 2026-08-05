@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit } from "@/lib/roles";
 import { PageHeader } from "@/components/ui-bits";
 import DonorForm from "@/components/donor-form";
@@ -8,10 +8,10 @@ import { updateDonorAction } from "@/app/actions/donors";
 
 export default async function EditDonorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession();
+  const session = await requireSession();
   if (!canEdit(session?.role)) redirect(`/donors/${id}`);
 
-  const donor = await prisma.donor.findUnique({ where: { id } });
+  const donor = await prisma.donor.findFirst({ where: { id, organizationId: session!.organizationId } });
   if (!donor) notFound();
 
   return (

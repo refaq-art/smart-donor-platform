@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit, canDelete } from "@/lib/roles";
 import { PageHeader, Badge, EmptyState } from "@/components/ui-bits";
 import { OPPORTUNITY_STATUS_COLORS } from "@/lib/constants";
@@ -19,10 +19,10 @@ const RELATIONSHIP_COLORS: Record<string, string> = {
 
 export default async function DonorDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession();
+  const session = await requireSession();
 
-  const donor = await prisma.donor.findUnique({
-    where: { id },
+  const donor = await prisma.donor.findFirst({
+    where: { id, organizationId: session.organizationId },
     include: { attachments: { orderBy: { uploadedAt: "desc" } }, opportunities: { include: { project: true } } },
   });
   if (!donor) notFound();

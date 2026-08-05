@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit } from "@/lib/roles";
 import { PageHeader, EmptyState, Badge, Pagination } from "@/components/ui-bits";
 import { DONOR_TYPES, DONOR_RELATIONSHIP_STATUSES } from "@/lib/constants";
@@ -21,10 +21,10 @@ export default async function DonorsPage({
   searchParams: Promise<{ q?: string; type?: string; status?: string; page?: string }>;
 }) {
   const sp = await searchParams;
-  const session = await getSession();
+  const session = await requireSession();
   const page = Math.max(1, Number(sp.page || 1));
 
-  const where: Prisma.DonorWhereInput = {};
+  const where: Prisma.DonorWhereInput = { organizationId: session!.organizationId };
   if (sp.q) {
     where.OR = [
       { name: { contains: sp.q } },

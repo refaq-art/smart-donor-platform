@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit, canDelete } from "@/lib/roles";
 import { PageHeader, Badge, EmptyState } from "@/components/ui-bits";
 import { PROJECT_STATUS_COLORS, OPPORTUNITY_STATUS_COLORS, STATUS_COLORS } from "@/lib/constants";
@@ -14,10 +14,10 @@ import { Pencil, Copy, Trash2, Plus, Target, FileText } from "lucide-react";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession();
+  const session = await requireSession();
 
-  const project = await prisma.project.findUnique({
-    where: { id },
+  const project = await prisma.project.findFirst({
+    where: { id, organizationId: session.organizationId },
     include: {
       attachments: { orderBy: { uploadedAt: "desc" } },
       opportunities: true,

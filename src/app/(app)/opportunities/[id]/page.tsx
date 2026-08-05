@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit, canDelete } from "@/lib/roles";
 import { PageHeader, Badge, EmptyState } from "@/components/ui-bits";
 import { OPPORTUNITY_STATUS_COLORS, STATUS_COLORS } from "@/lib/constants";
@@ -9,16 +9,25 @@ import { formatMoney, formatDate, daysUntil } from "@/lib/utils";
 import ConfirmSubmitButton from "@/components/confirm-submit-button";
 import { deleteOpportunityAction } from "@/app/actions/opportunities";
 import { Pencil, Trash2, Plus, FileText, ExternalLink, AlertTriangle } from "lucide-react";
+import EligibilityPanel from "@/components/eligibility-panel";
+import { canManageEligibility } from "@/lib/roles";
+import {
+  addCriterionAction,
+  deleteCriterionAction,
+  evaluateOpportunityEligibility,
+} from "@/app/actions/eligibility";
 
 export default async function OpportunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession();
+  const session = await requireSession();
 
-  const opp = await prisma.fundingOpportunity.findUnique({
-    where: { id },
-    include: { donor: true, project: true, applications: true },
+  const opp = await prisma.fundingOpportunity.findFirst({
+    where: { id, organizationId: session.organizationId },
+    include: { donor: true, project: true, applications: true, criteria: true },
   });
   if (!opp) notFound();
+
+  const eligibility = await evaluateOpportunityEligibility(id);
 
   const days = daysUntil(opp.deadline);
   const urgent = days !== null && days <= 14 && days >= 0 && opp.status !== "مغلقة";
@@ -75,6 +84,16 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             <p className="text-sm font-black text-brand-700">الشروط والمتطلبات</p>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{opp.requirements || "لم تُسجل شروط بعد."}</p>
           </div>
+
+          <EligibilityPanel
+            opportunityId={id}
+            criteria={opp.criteria}
+            initialResult={eligibility}
+            addAction={addCriterionAction}
+            deleteAction={deleteCriterionAction}
+            evaluateAction={evaluateOpportunityEligibility}
+            editable={canManageEligibility(session.role)}
+          />
 
           <div className="card space-y-3 p-5">
             <p className="text-sm font-black text-brand-700">طلبات المنح المرتبطة</p>

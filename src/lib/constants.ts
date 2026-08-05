@@ -66,3 +66,20 @@ export const ALLOWED_UPLOAD_TYPES: Record<string, string> = {
 };
 
 export const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 10);
+
+export const DOCUMENT_CATEGORIES = [
+  "ترخيص الجمعية",
+  "شهادة الزكاة والدخل",
+  "القوائم المالية",
+  "الميزانية السنوية",
+  "الخطة الاستراتيجية",
+  "الخطة التشغيلية",
+  "التقرير السنوي",
+  "شهادة الحوكمة",
+  "محضر مجلس إدارة",
+  "الهيكل التنظيمي",
+  "دراسة جدوى",
+  "خطة قياس الأثر",
+  "تقرير دعم سابق",
+  "أخرى",
+] as const;

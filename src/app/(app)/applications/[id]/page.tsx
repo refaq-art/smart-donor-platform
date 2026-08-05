@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/authz";
 import { canEdit, canChangeStatus, canDelete } from "@/lib/roles";
 import { PageHeader } from "@/components/ui-bits";
 import ApplicationEditor from "@/components/application-editor";
@@ -15,10 +15,10 @@ import { Trash2, History } from "lucide-react";
 
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession();
+  const session = await requireSession();
 
-  const application = await prisma.grantApplication.findUnique({
-    where: { id },
+  const application = await prisma.grantApplication.findFirst({
+    where: { id, organizationId: session.organizationId },
     include: {
       project: true,
       opportunity: true,
@@ -30,10 +30,13 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
 
   const [opportunities, users] = await Promise.all([
     prisma.fundingOpportunity.findMany({
-      where: { OR: [{ projectId: application.projectId }, { projectId: null }] },
+      where: {
+        organizationId: session.organizationId,
+        OR: [{ projectId: application.projectId }, { projectId: null }],
+      },
       select: { id: true, title: true, field: true, requirements: true },
     }),
-    prisma.user.findMany({ select: { id: true, name: true } }),
+    prisma.user.findMany({ where: { organizationId: session.organizationId, isActive: true }, select: { id: true, name: true } }),
   ]);
 
   const readOnly = !canEdit(session?.role);

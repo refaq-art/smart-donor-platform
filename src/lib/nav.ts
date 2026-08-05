@@ -6,6 +6,7 @@ import {
   FileText,
   BarChart3,
   Users,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -23,5 +24,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/donors", label: "الجهات المانحة", icon: HandCoins },
   { href: "/applications", label: "طلبات المنح", icon: FileText },
   { href: "/reports", label: "التقارير", icon: BarChart3 },
+  { href: "/settings/organization", label: "ملف الجمعية", icon: Building2 },
   { href: "/settings/users", label: "المستخدمون", icon: Users, adminOnly: true },
 ];

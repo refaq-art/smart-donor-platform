@@ -22,7 +22,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
   await prisma.user.deleteMany({});
 
   log("🏢 إنشاء بيانات الجمعية...");
-  await prisma.organization.create({
+  const org = await prisma.organization.create({
     data: {
       name: "جمعية رفاق الخيرية",
       about:
@@ -31,7 +31,26 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       phone: "0555000000",
       email: "info@refaq.org",
       website: "https://example.org",
+      address: "حي النقرة، طريق الملك عبدالعزيز، حائل",
       regNumber: "1234-REG",
+      licenseDate: new Date("2014-03-01"),
+      licenseExpiry: new Date("2027-03-01"),
+      supervisingBody: "المركز الوطني لتنمية القطاع غير الربحي",
+      foundedAt: new Date("2014-01-15"),
+      sector: "تعليمي، تنموي، إغاثي",
+      geographicScope: "منطقة حائل",
+      strategicGoals: JSON.stringify([
+        "تحسين المخرجات التعليمية للأيتام والأسر المحتاجة",
+        "تعزيز الأمن الغذائي للأسر منخفضة الدخل",
+        "بناء قدرات الناشئة والشباب مهاريًا وقيميًا",
+      ]),
+      delegateName: "خالد المطيري",
+      delegateRole: "المدير التنفيذي",
+      delegatePhone: "0555000001",
+      delegateEmail: "manager@refaq.org",
+      bankName: "مصرف الراجحي",
+      iban: "SA0380000000608010167519",
+      annualBudget: 2400000,
       accentColor: "#0f766e",
       isDemo: true,
     },
@@ -41,16 +60,16 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
   const admin = await prisma.user.create({
-    data: { name: "سارة العتيبي", email: "admin@refaq.org", passwordHash, role: "ADMIN", isDemo: true },
+    data: { name: "سارة العتيبي", email: "admin@refaq.org", passwordHash, role: "ADMIN", organizationId: org.id, isDemo: true },
   });
   const manager = await prisma.user.create({
-    data: { name: "خالد المطيري", email: "manager@refaq.org", passwordHash, role: "ORG_MANAGER", isDemo: true },
+    data: { name: "خالد المطيري", email: "manager@refaq.org", passwordHash, role: "ORG_MANAGER", organizationId: org.id, isDemo: true },
   });
   const officer = await prisma.user.create({
-    data: { name: "نورة القحطاني", email: "officer@refaq.org", passwordHash, role: "GRANTS_OFFICER", isDemo: true },
+    data: { name: "نورة القحطاني", email: "officer@refaq.org", passwordHash, role: "GRANTS_OFFICER", organizationId: org.id, isDemo: true },
   });
   const reviewer = await prisma.user.create({
-    data: { name: "فهد الدوسري", email: "reviewer@refaq.org", passwordHash, role: "REVIEWER", isDemo: true },
+    data: { name: "فهد الدوسري", email: "reviewer@refaq.org", passwordHash, role: "REVIEWER", organizationId: org.id, isDemo: true },
   });
 
   log("💛 إنشاء الجهات المانحة...");
@@ -67,6 +86,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       relationshipStatus: "نشط",
       notes: "علاقة قائمة منذ عامين، تفضل المشاريع ذات الأثر القابل للقياس.",
       isDemo: true,
+      organizationId: org.id,
     },
   });
   const donor2 = await prisma.donor.create({
@@ -82,6 +102,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       relationshipStatus: "نشط",
       notes: "مناسبة لمشاريع السلال الغذائية والحملات الموسمية.",
       isDemo: true,
+      organizationId: org.id,
     },
   });
   const donor3 = await prisma.donor.create({
@@ -97,6 +118,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       relationshipStatus: "محتمل",
       notes: "لم يبدأ التواصل الرسمي بعد — بانتظار فتح باب التقديم القادم.",
       isDemo: true,
+      organizationId: org.id,
     },
   });
   const donor4 = await prisma.donor.create({
@@ -112,6 +134,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       relationshipStatus: "متوقف",
       notes: "تم التقديم سابقًا ولم يُقبل الطلب؛ يُنصح بإعادة التواصل بعد نصف عام.",
       isDemo: true,
+      organizationId: org.id,
     },
   });
 
@@ -154,6 +177,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       status: "نشط",
       isDemo: true,
       createdById: officer.id,
+      organizationId: org.id,
     },
   });
 
@@ -189,6 +213,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       status: "نشط",
       isDemo: true,
       createdById: officer.id,
+      organizationId: org.id,
     },
   });
 
@@ -214,6 +239,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       status: "مسودة",
       isDemo: true,
       createdById: manager.id,
+      organizationId: org.id,
     },
   });
 
@@ -238,6 +264,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       status: "مسودة",
       isDemo: true,
       createdById: officer.id,
+      organizationId: org.id,
     },
   });
 
@@ -258,6 +285,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       status: "مفتوحة",
       projectId: project1.id,
       isDemo: true,
+      organizationId: org.id,
     },
   });
   const opp2 = await prisma.fundingOpportunity.create({
@@ -273,6 +301,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       status: "مفتوحة",
       projectId: project2.id,
       isDemo: true,
+      organizationId: org.id,
     },
   });
   const opp3 = await prisma.fundingOpportunity.create({
@@ -288,6 +317,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       status: "تحت المتابعة",
       projectId: project3.id,
       isDemo: true,
+      organizationId: org.id,
     },
   });
   const opp4 = await prisma.fundingOpportunity.create({
@@ -303,6 +333,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       status: "مغلقة",
       projectId: project4.id,
       isDemo: true,
+      organizationId: org.id,
     },
   });
   await prisma.fundingOpportunity.create({
@@ -315,6 +346,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       deadline: inDays(30),
       status: "تحت المتابعة",
       isDemo: true,
+      organizationId: org.id,
     },
   });
 
@@ -337,6 +369,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
         status: opts.status,
         assignedToId: opts.assignedToId,
         createdById: officer.id,
+        organizationId: org.id,
         isDemo: true,
         ...(opts.fields || {}),
       },
@@ -466,6 +499,98 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
     status: "مسودة",
     assignedToId: officer.id,
     history: [{ toStatus: "مسودة", note: "تم إنشاء الطلب", changedById: officer.id }],
+  });
+
+  log("👔 إنشاء مجلس الإدارة والفريق التنفيذي...");
+  await prisma.boardMember.createMany({
+    data: [
+      { organizationId: org.id, name: "أ. عبدالرحمن الشمري", position: "رئيس مجلس الإدارة", memberType: "BOARD", isDemo: true },
+      { organizationId: org.id, name: "أ. منى العنزي", position: "نائب الرئيس", memberType: "BOARD", isDemo: true },
+      { organizationId: org.id, name: "أ. سعد الرشيدي", position: "أمين الصندوق", memberType: "BOARD", isDemo: true },
+      { organizationId: org.id, name: "خالد المطيري", position: "المدير التنفيذي", memberType: "EXECUTIVE", phone: "0555000001", isDemo: true },
+      { organizationId: org.id, name: "نورة القحطاني", position: "مسؤول المنح", memberType: "EXECUTIVE", isDemo: true },
+    ],
+  });
+
+  log("📚 إنشاء مكتبة المستندات...");
+  const inDaysDoc = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+  await prisma.orgDocument.createMany({
+    data: [
+      {
+        organizationId: org.id, title: "ترخيص الجمعية", category: "ترخيص الجمعية",
+        filename: "license.pdf", storedName: "demo-license.pdf", url: "#", mimeType: "application/pdf", size: 120000,
+        issueDate: new Date("2014-03-01"), expiryDate: inDaysDoc(420), isDemo: true,
+      },
+      {
+        organizationId: org.id, title: "القوائم المالية 2025", category: "القوائم المالية",
+        filename: "financials-2025.pdf", storedName: "demo-fin.pdf", url: "#", mimeType: "application/pdf", size: 220000,
+        issueDate: new Date("2026-02-01"), isDemo: true,
+      },
+      {
+        organizationId: org.id, title: "شهادة الحوكمة", category: "شهادة الحوكمة",
+        filename: "governance.pdf", storedName: "demo-gov.pdf", url: "#", mimeType: "application/pdf", size: 90000,
+        issueDate: new Date("2025-06-01"), expiryDate: inDaysDoc(20), isDemo: true,
+      },
+      {
+        organizationId: org.id, title: "الخطة الاستراتيجية 2025-2028", category: "الخطة الاستراتيجية",
+        filename: "strategy.pdf", storedName: "demo-strategy.pdf", url: "#", mimeType: "application/pdf", size: 310000,
+        issueDate: new Date("2025-01-15"), isDemo: true,
+      },
+      {
+        organizationId: org.id, title: "شهادة الزكاة والدخل (منتهية)", category: "شهادة الزكاة والدخل",
+        filename: "zakat.pdf", storedName: "demo-zakat.pdf", url: "#", mimeType: "application/pdf", size: 70000,
+        issueDate: new Date("2024-01-01"), expiryDate: inDaysDoc(-15), isDemo: true,
+      },
+    ],
+  });
+
+  log("🛂 إنشاء شروط الأهلية لفرص التمويل...");
+  await prisma.eligibilityCriterion.createMany({
+    data: [
+      { opportunityId: opp1.id, ruleKey: "ORG_AGE_YEARS", label: "ألا يقل عمر الجمعية عن 3 سنوات", operator: "GTE", value: "3", isMandatory: true, isDemo: true },
+      { opportunityId: opp1.id, ruleKey: "ORG_HAS_VALID_LICENSE", label: "ترخيص الجمعية ساري المفعول", operator: "BOOLEAN", isMandatory: true, isDemo: true },
+      { opportunityId: opp1.id, ruleKey: "PROJECT_CATEGORY", label: "أن يكون المشروع في المجال التعليمي", operator: "IN", value: "تعليمي", isMandatory: true, isDemo: true },
+      { opportunityId: opp1.id, ruleKey: "HAS_DOCUMENT", label: "توفر القوائم المالية", operator: "EXISTS", documentCategory: "القوائم المالية", isMandatory: true, isDemo: true },
+      { opportunityId: opp1.id, ruleKey: "PROJECT_HAS_KPIS", label: "وجود مؤشرات أداء قابلة للقياس", operator: "BOOLEAN", isMandatory: true, isDemo: true },
+      { opportunityId: opp1.id, ruleKey: "PROJECT_BUDGET", label: "ألا تتجاوز قيمة المشروع 200,000 ريال", operator: "LTE", value: "200000", isMandatory: false, isDemo: true },
+      { opportunityId: opp1.id, ruleKey: "SELF_CONTRIBUTION_PCT", label: "مساهمة ذاتية لا تقل عن 10%", operator: "GTE", value: "10", isMandatory: false, notes: "يُحسب من الميزانية التفصيلية", isDemo: true },
+
+      { opportunityId: opp3.id, ruleKey: "ORG_AGE_YEARS", label: "ألا يقل عمر الجمعية عن 5 سنوات", operator: "GTE", value: "5", isMandatory: true, isDemo: true },
+      { opportunityId: opp3.id, ruleKey: "HAS_DOCUMENT", label: "توفر شهادة الحوكمة", operator: "EXISTS", documentCategory: "شهادة الحوكمة", isMandatory: true, isDemo: true },
+      { opportunityId: opp3.id, ruleKey: "HAS_DOCUMENT", label: "توفر شهادة الزكاة والدخل سارية", operator: "EXISTS", documentCategory: "شهادة الزكاة والدخل", isMandatory: true, isDemo: true },
+      { opportunityId: opp3.id, ruleKey: "PROJECT_HAS_TIMELINE", label: "وجود جدول زمني محدد", operator: "BOOLEAN", isMandatory: false, isDemo: true },
+    ],
+  });
+
+  // جمعية ثانية — وجودها ضروري لإثبات عزل البيانات في الاختبارات الآلية
+  log("🏢 إنشاء جمعية ثانية للتحقق من العزل...");
+  const org2 = await prisma.organization.create({
+    data: {
+      name: "جمعية الأمل التنموية",
+      about: "جمعية تنموية تعمل في مجال التمكين الاقتصادي.",
+      city: "القصيم",
+      sector: "تنموي",
+      geographicScope: "منطقة القصيم",
+      foundedAt: new Date("2019-05-01"),
+      isDemo: true,
+    },
+  });
+  const amalAdmin = await prisma.user.create({
+    data: { name: "مدير جمعية الأمل", email: "admin@amal.org", passwordHash, role: "ADMIN", organizationId: org2.id, isDemo: true },
+  });
+  await prisma.user.create({
+    data: { name: "مسؤول منح الأمل", email: "officer@amal.org", passwordHash, role: "GRANTS_OFFICER", organizationId: org2.id, isDemo: true },
+  });
+  await prisma.project.create({
+    data: {
+      title: "مشروع جمعية الأمل للتمكين",
+      category: "تنموي",
+      problemStatement: "ضعف فرص التمكين الاقتصادي للأسر المنتجة.",
+      status: "نشط",
+      organizationId: org2.id,
+      createdById: amalAdmin.id,
+      isDemo: true,
+    },
   });
 
   log("✅ اكتملت تعبئة البيانات التجريبية بنجاح.");
