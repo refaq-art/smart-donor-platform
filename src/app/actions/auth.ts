@@ -15,7 +15,19 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
     return { error: "الرجاء إدخال البريد الإلكتروني وكلمة المرور" };
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  let user: Awaited<ReturnType<typeof prisma.user.findUnique>>;
+  try {
+    user = await prisma.user.findUnique({ where: { email } });
+  } catch (err) {
+    // أشيع سبب هنا هو قاعدة بيانات لم تُهيَّأ بعد (الجداول غير موجودة) — نعرض رسالة
+    // واضحة بدل صفحة خطأ عامة لا تدل على شيء.
+    console.error("login: database query failed", err);
+    return {
+      error:
+        "تعذّر الوصول إلى قاعدة البيانات. إن كان هذا أول تشغيل بعد النشر، فالجداول لم تُنشأ بعد — راجع خطوة تهيئة قاعدة البيانات في ملف README.",
+    };
+  }
+
   if (!user) {
     return { error: "بيانات الدخول غير صحيحة" };
   }
