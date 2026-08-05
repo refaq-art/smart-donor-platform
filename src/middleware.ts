@@ -27,7 +27,11 @@ export async function middleware(req: NextRequest) {
     PUBLIC_PATHS.some((p) => pathname === p) ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/uploads") ||
-    pathname.startsWith("/favicon")
+    pathname.startsWith("/favicon") ||
+    // نقاط الإدارة/التهيئة تحمي نفسها بـ BOOTSTRAP_SECRET بدل جلسة المستخدم — يجب
+    // استثناؤها هنا وإلا أُعيد توجيهها لصفحة الدخول، وهو ما يجعل تهيئة قاعدة
+    // البيانات مستحيلة أصلًا (لا يمكن تسجيل الدخول قبل إنشاء الجداول).
+    pathname.startsWith("/api/admin/")
   ) {
     return NextResponse.next();
   }
