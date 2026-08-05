@@ -289,7 +289,6 @@ CREATE TABLE IF NOT EXISTS "ApplicationVersion" (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
-CREATE INDEX IF NOT EXISTS "User_organizationId_idx" ON "User"("organizationId");
 CREATE INDEX IF NOT EXISTS "BoardMember_organizationId_idx" ON "BoardMember"("organizationId");
 CREATE INDEX IF NOT EXISTS "OrgDocument_organizationId_idx" ON "OrgDocument"("organizationId");
 CREATE INDEX IF NOT EXISTS "OrgDocument_category_idx" ON "OrgDocument"("category");
@@ -341,4 +340,9 @@ export const TURSO_MIGRATE_STATEMENTS: string[] = [
   `UPDATE "FundingOpportunity" SET "organizationId" = (SELECT "id" FROM "Organization" LIMIT 1) WHERE "organizationId" = ''`,
   `UPDATE "GrantApplication" SET "organizationId" = (SELECT "id" FROM "Organization" LIMIT 1) WHERE "organizationId" = ''`,
   `UPDATE "ActivityLog" SET "organizationId" = (SELECT "id" FROM "Organization" LIMIT 1) WHERE "organizationId" IS NULL`,
+
+  // فهرس User.organizationId يُنشأ هنا (بعد إضافة العمود أعلاه) وليس ضمن
+  // TURSO_CREATE_TABLES_SQL، لأن "User" جدول قائم مسبقًا على أي نشر سابق —
+  // إنشاء فهرس على عمود غير موجود بعد يفشل بخطأ "no such column".
+  `CREATE INDEX IF NOT EXISTS "User_organizationId_idx" ON "User"("organizationId")`,
 ];
