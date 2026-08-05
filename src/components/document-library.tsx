@@ -4,7 +4,8 @@ import { useFormState, useFormStatus } from "react-dom";
 import { useEffect, useRef } from "react";
 import type { DocState } from "@/app/actions/organization";
 import { DOCUMENT_CATEGORIES } from "@/lib/constants";
-import { formatDate, daysUntil } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { documentValidity } from "@/lib/document-validity";
 import ConfirmSubmitButton from "./confirm-submit-button";
 import { FolderOpen, Trash2, UploadCloud, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,16 +20,6 @@ type Doc = {
   expiryDate: Date | string | null;
   notes: string | null;
 };
-
-/** حالة صلاحية المستند — تُحسب من تاريخ الانتهاء. */
-export function documentValidity(expiry: Date | string | null) {
-  if (!expiry) return { label: "بدون تاريخ انتهاء", tone: "neutral" as const, days: null };
-  const days = daysUntil(expiry);
-  if (days === null) return { label: "غير محدد", tone: "neutral" as const, days: null };
-  if (days < 0) return { label: "منتهي الصلاحية", tone: "danger" as const, days };
-  if (days <= 30) return { label: `ينتهي خلال ${days} يومًا`, tone: "warn" as const, days };
-  return { label: "ساري", tone: "ok" as const, days };
-}
 
 function UploadButton() {
   const { pending } = useFormStatus();

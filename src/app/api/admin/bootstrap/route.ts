@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@libsql/client/web";
 import { prisma } from "@/lib/prisma";
 import { seedDemoData } from "@/lib/seed-data";
-import { TURSO_INIT_SQL } from "@/lib/turso-init-sql";
+import { TURSO_CREATE_TABLES_SQL, TURSO_MIGRATE_STATEMENTS } from "@/lib/turso-init-sql";
 
 // نقطة تهيئة سحابية لمرة واحدة: تُنشئ جداول قاعدة بيانات Turso (إن لم تكن موجودة)
 // ثم تُعبّئ البيانات التجريبية فقط إذا كانت قاعدة البيانات فارغة تمامًا — لا تلمس
@@ -26,17 +26,40 @@ async function handleBootstrap(providedSecret: string | null) {
 
   try {
     const rawClient = createClient({ url: tursoUrl, authToken: process.env.TURSO_AUTH_TOKEN });
-    await rawClient.executeMultiple(TURSO_INIT_SQL);
+
+    // الخطوة 1: إنشاء أي جداول ناقصة بأحدث مخطط كامل (آمنة التكرار)
+    await rawClient.executeMultiple(TURSO_CREATE_TABLES_SQL);
+
+    // الخطوة 2: ترقية أي جداول قائمة من نشر أقدم بإضافة الأعمدة الناقصة وتعبئتها
+    const migrationLog: { statement: string; result: "applied" | "already_applied" | "error" }[] = [];
+    for (const statement of TURSO_MIGRATE_STATEMENTS) {
+      try {
+        await rawClient.execute(statement);
+        migrationLog.push({ statement, result: "applied" });
+      } catch (err) {
+        const message = err instanceof Error ? err.message.toLowerCase() : "";
+        if (message.includes("duplicate column") || message.includes("already exists")) {
+          migrationLog.push({ statement, result: "already_applied" });
+        } else {
+          migrationLog.push({ statement, result: "error" });
+        }
+      }
+    }
 
     const userCount = await prisma.user.count();
     if (userCount > 0) {
-      return NextResponse.json({ schemaApplied: true, seeded: false, message: "الجداول موجودة والبيانات غير فارغة — تم تخطي التعبئة التجريبية." });
+      return NextResponse.json({
+        schemaApplied: true,
+        seeded: false,
+        message: "الجداول موجودة والبيانات غير فارغة — تم تخطي التعبئة التجريبية.",
+        migrationLog,
+      });
     }
 
     const logs: string[] = [];
     const result = await seedDemoData(prisma, (msg) => logs.push(msg));
 
-    return NextResponse.json({ schemaApplied: true, seeded: true, adminEmail: result.adminEmail, logs });
+    return NextResponse.json({ schemaApplied: true, seeded: true, adminEmail: result.adminEmail, logs, migrationLog });
   } catch (err) {
     const message = err instanceof Error ? err.message : "خطأ غير معروف";
     const stack = err instanceof Error ? err.stack : undefined;

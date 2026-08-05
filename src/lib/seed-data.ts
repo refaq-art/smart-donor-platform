@@ -389,7 +389,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
     return app;
   }
 
-  await createApplication({
+  const appTeaching = await createApplication({
     title: "طلب دعم كفالة تعليم الأيتام — مؤسسة الأفق للتنمية",
     projectId: project1.id,
     opportunityId: opp1.id,
@@ -446,7 +446,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
     ],
   });
 
-  await createApplication({
+  const appNadi = await createApplication({
     title: "طلب دعم نادي رفاق القيمي — الهيئة الوطنية",
     projectId: project3.id,
     opportunityId: opp3.id,
@@ -499,6 +499,53 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
     status: "مسودة",
     assignedToId: officer.id,
     history: [{ toStatus: "مسودة", note: "تم إنشاء الطلب", changedById: officer.id }],
+  });
+
+  log("💬 إنشاء تعليقات المراجعة وسجل الإصدارات التجريبي...");
+  await prisma.applicationComment.createMany({
+    data: [
+      {
+        applicationId: appNadi.id,
+        fieldKey: "budget",
+        body: "الرجاء إضافة تفصيل بنود الميزانية بدل الرقم الإجمالي فقط، حتى تتوافق مع نموذج الهيئة الوطنية.",
+        kind: "CHANGE_REQUEST",
+        status: "OPEN",
+        authorId: reviewer.id,
+        isDemo: true,
+      },
+      {
+        applicationId: appNadi.id,
+        fieldKey: "kpis",
+        body: "لا يوجد مؤشرات أداء مكتوبة بعد لهذا الطلب — الرجاء إضافتها قبل رفعه للاعتماد.",
+        kind: "CHANGE_REQUEST",
+        status: "OPEN",
+        authorId: reviewer.id,
+        isDemo: true,
+      },
+      {
+        applicationId: appTeaching.id,
+        fieldKey: "executiveSummary",
+        body: "الملخص واضح ومتوافق مع شروط الجهة المانحة.",
+        kind: "NOTE",
+        status: "RESOLVED",
+        authorId: reviewer.id,
+        resolvedAt: inDays(-3),
+        isDemo: true,
+      },
+    ],
+  });
+
+  await prisma.applicationVersion.create({
+    data: {
+      applicationId: appTeaching.id,
+      label: "قبل مراجعة المراجع",
+      snapshot: JSON.stringify({
+        title: appTeaching.title,
+        executiveSummary: "مسودة أولى: دعم تعليم أيتام بميزانية غير محددة بعد.",
+        problemStatement: appTeaching.problemStatement || "",
+      }),
+      createdById: officer.id,
+    },
   });
 
   log("👔 إنشاء مجلس الإدارة والفريق التنفيذي...");

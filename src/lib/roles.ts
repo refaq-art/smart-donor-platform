@@ -11,3 +11,4 @@ export const canManageOrgProfile = (role?: string | null) => roleHasPermission(r
 export const canReview = (role?: string | null) => roleHasPermission(role, "review");
 export const canFinalApprove = (role?: string | null) => roleHasPermission(role, "finalApproval");
 export const canManageEligibility = (role?: string | null) => roleHasPermission(role, "manageEligibility");
+export const canComment = (role?: string | null) => roleHasPermission(role, "comment");

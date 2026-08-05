@@ -12,6 +12,7 @@ import {
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { APPLICATION_STATUSES } from "@/lib/constants";
+import { snapshotIfChanged } from "@/lib/application-version-snapshot";
 
 const newAppSchema = z.object({
   title: z.string().min(3, "عنوان الطلب مطلوب"),
@@ -92,10 +93,10 @@ export async function updateApplicationContentAction(
   _prev: ApplicationContentState,
   formData: FormData
 ): Promise<ApplicationContentState> {
-  let session;
+  let session, current;
   try {
     await requirePermission("editRecords");
-    ({ session } = await requireOwnedApplication(id));
+    ({ application: current, session } = await requireOwnedApplication(id));
   } catch (e) {
     return { error: e instanceof AuthzError ? e.message : "غير مصرَّح" };
   }
@@ -103,6 +104,9 @@ export async function updateApplicationContentAction(
   const raw = Object.fromEntries(formData.entries());
   const parsed = contentSchema.safeParse(raw);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message || "بيانات غير صحيحة" };
+
+  // احفظ لقطة من المحتوى قبل الكتابة فوقه، لبناء سجل إصدارات قابل للمقارنة والاستعادة
+  await snapshotIfChanged(id, current, session.userId);
 
   const d = parsed.data;
   await prisma.grantApplication.update({
