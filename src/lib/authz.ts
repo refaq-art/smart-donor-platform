@@ -38,6 +38,24 @@ export async function orgScope(): Promise<{ organizationId: string }> {
   return { organizationId: session.organizationId };
 }
 
+/**
+ * يتحقق أن جلسة موقَّعة صالحة (JWT سليم) لا تزال مطابقة لحالة المستخدم
+ * الفعلية في قاعدة البيانات — حساب نشط، ونفس الجمعية. هذا تحقق إضافي على
+ * صلاحية توقيع الـ JWT وحدها (التي تتحقق منها الـ middleware فقط)، لالتقاط
+ * الحسابات المُعطَّلة أو التي تغيّرت جمعيتها بعد إصدار الجلسة.
+ *
+ * لا تحذف كعكة الجلسة هنا عمدًا — Next.js يمنع تعديل الكعك من داخل مكوّن
+ * خادم أثناء العرض (Server Component)، ويجب استخدامها فقط للتوجيه. تسجيل
+ * الدخول من جديد يستبدل الكعكة القديمة بأخرى صالحة عبر Server Action.
+ */
+export async function isSessionUserValid(session: SessionPayload): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { isActive: true, organizationId: true },
+  });
+  return !!user && user.isActive && user.organizationId === session.organizationId;
+}
+
 export async function requireRole(allowed: readonly string[]): Promise<SessionPayload> {
   const session = await requireSessionOrThrow();
   if (!allowed.includes(session.role)) {

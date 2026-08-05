@@ -1,4 +1,5 @@
-import { getSession, clearSessionCookie } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
+import { isSessionUserValid } from "@/lib/authz";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AppShell from "@/components/app-shell";
@@ -8,13 +9,8 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
   if (!session) redirect("/login");
 
   // التحقق من أن الحساب لا يزال نشطًا وأن الجلسة لم تُبطَل (بعد تغيير كلمة المرور
-  // أو تعطيل الحساب من قبل المدير) — الجلسة وحدها لا تكفي.
-  const currentUser = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { isActive: true, mustChangePassword: true, organizationId: true },
-  });
-  if (!currentUser || !currentUser.isActive || currentUser.organizationId !== session.organizationId) {
-    await clearSessionCookie();
+  // أو تعطيل الحساب من قبل المدير) — توقيع الـ JWT الصالح وحده لا يكفي.
+  if (!(await isSessionUserValid(session))) {
     redirect("/login");
   }
 
