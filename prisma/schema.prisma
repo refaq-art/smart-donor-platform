@@ -2,6 +2,9 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
+  // "native" لبيئة التطوير المحلية، و"rhel-openssl-3.0.x" لبيئة تشغيل Vercel
+  // (Amazon Linux 2023) — بدونه لا يجد Prisma محرك الاستعلامات المناسب وقت التشغيل.
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
