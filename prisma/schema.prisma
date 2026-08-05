@@ -38,6 +38,7 @@ model User {
   statusChanges        ApplicationStatusHistory[]
   activityLogs         ActivityLog[]
   comments             ApplicationComment[]
+  applicationVersions  ApplicationVersion[]
   uploadedDocuments    OrgDocument[]
 
   @@index([organizationId])
@@ -364,6 +365,7 @@ model ApplicationVersion {
   // كامل محتوى أقسام الطلب وقت الحفظ كـ JSON
   snapshot      String
   createdById   String?
+  createdBy     User?            @relation(fields: [createdById], references: [id])
   label         String?
   createdAt     DateTime         @default(now())
 

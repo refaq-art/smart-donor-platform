@@ -2,16 +2,21 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireSession } from "@/lib/authz";
-import { canEdit, canChangeStatus, canDelete } from "@/lib/roles";
+import { canEdit, canChangeStatus, canDelete, canComment, canReview } from "@/lib/roles";
 import { PageHeader } from "@/components/ui-bits";
 import ApplicationEditor from "@/components/application-editor";
 import StatusPanel from "@/components/status-panel";
 import AttachmentsPanel from "@/components/attachments-panel";
+import ApplicationCommentsPanel from "@/components/application-comments-panel";
+import ApplicationVersionsPanel from "@/components/application-versions-panel";
 import ConfirmSubmitButton from "@/components/confirm-submit-button";
 import { updateApplicationContentAction, changeApplicationStatusAction, deleteApplicationAction } from "@/app/actions/applications";
 import { uploadAttachmentAction } from "@/app/actions/attachments";
+import { addCommentAction, resolveCommentAction, deleteCommentAction } from "@/app/actions/application-comments";
+import { restoreVersionAction } from "@/app/actions/application-versions";
+import { FIELD_KEYS, type Fields } from "@/lib/application-fields";
 import { formatDate } from "@/lib/utils";
-import { Trash2, History } from "lucide-react";
+import { Trash2, History, Printer, FileDown, FileSpreadsheet } from "lucide-react";
 
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,6 +29,8 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       opportunity: true,
       attachments: { orderBy: { uploadedAt: "desc" } },
       statusHistory: { orderBy: { createdAt: "desc" }, include: { changedBy: true } },
+      comments: { orderBy: { createdAt: "desc" }, include: { author: { select: { id: true, name: true } } } },
+      versions: { orderBy: { createdAt: "desc" }, include: { createdBy: { select: { name: true } } } },
     },
   });
   if (!application) notFound();
@@ -52,6 +59,15 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             <Link href={`/projects/${application.projectId}`} className="btn-secondary">
               عرض المشروع
             </Link>
+            <Link href={`/applications/${id}/print`} className="btn-secondary" target="_blank">
+              <Printer size={15} /> طباعة / PDF
+            </Link>
+            <a href={`/api/applications/${id}/export/docx`} className="btn-secondary">
+              <FileDown size={15} /> تصدير Word
+            </a>
+            <a href={`/api/applications/${id}/export/budget-xlsx`} className="btn-secondary">
+              <FileSpreadsheet size={15} /> تصدير الميزانية Excel
+            </a>
             {canDelete(session?.role) && (
               <form action={deleteApplicationAction.bind(null, id)}>
                 <ConfirmSubmitButton confirmMessage="هل أنت متأكد من حذف هذا الطلب؟" className="btn-danger">
@@ -136,6 +152,32 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           uploadAction={boundUpload}
           revalidateTarget={`/applications/${id}`}
           canEdit={!readOnly}
+        />
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ApplicationCommentsPanel
+            applicationId={id}
+            comments={application.comments}
+            currentUserId={session.userId}
+            canComment={canComment(session?.role)}
+            canReview={canReview(session?.role)}
+            canDeleteAny={canDelete(session?.role)}
+            addAction={addCommentAction}
+            resolveAction={resolveCommentAction}
+            deleteAction={deleteCommentAction}
+          />
+        </div>
+        <ApplicationVersionsPanel
+          applicationId={id}
+          versions={application.versions}
+          current={{
+            title: application.title,
+            ...(Object.fromEntries(FIELD_KEYS.map((k) => [k, application[k] || ""])) as Fields),
+          }}
+          canRestore={!readOnly}
+          restoreAction={restoreVersionAction}
         />
       </div>
     </div>

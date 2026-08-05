@@ -32,6 +32,14 @@ export const CAN = {
   ],
   /** ضبط قواعد الأهلية للفرص */
   manageEligibility: [ROLES.ADMIN, ROLES.ORG_MANAGER, ROLES.GRANTS_OFFICER],
+  /** إضافة ملاحظات ومتابعتها على الطلبات (كل الأدوار المرتبطة بالطلبات) */
+  comment: [
+    ROLES.ADMIN,
+    ROLES.ORG_MANAGER,
+    ROLES.GRANTS_OFFICER,
+    ROLES.REVIEWER,
+    ROLES.FINANCE_REVIEWER,
+  ],
 } as const;
 
 export type Permission = keyof typeof CAN;

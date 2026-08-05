@@ -4,8 +4,12 @@ import { requireSession } from "@/lib/authz";
 import { PageHeader, StatCard, Badge, EmptyState, ProgressBar } from "@/components/ui-bits";
 import { STATUS_COLORS, OPPORTUNITY_STATUS_COLORS } from "@/lib/constants";
 import { computeCompletion } from "@/lib/completion";
-import { formatDate, daysUntil } from "@/lib/utils";
-import { FolderKanban, Target, FileText, CheckCircle2, XCircle, Clock, AlertTriangle, Plus } from "lucide-react";
+import { documentValidity } from "@/lib/document-validity";
+import { formatDate, formatMoney, daysUntil } from "@/lib/utils";
+import { FolderKanban, Target, FileText, CheckCircle2, XCircle, Clock, AlertTriangle, Plus, FolderOpen, MessageSquare, Timer, Wallet } from "lucide-react";
+
+const ACTIVE_APP_STATUSES = ["مسودة", "تحت المراجعة الداخلية", "جاهز للإرسال", "مطلوب استكمال"];
+const STALLED_AFTER_DAYS = 14;
 
 export default async function DashboardPage() {
   const session = await requireSession();
@@ -14,6 +18,10 @@ export default async function DashboardPage() {
   const now = new Date();
   const soon = new Date();
   soon.setDate(soon.getDate() + 14);
+  const docsSoon = new Date();
+  docsSoon.setDate(docsSoon.getDate() + 30);
+  const stalledCutoff = new Date();
+  stalledCutoff.setDate(stalledCutoff.getDate() - STALLED_AFTER_DAYS);
 
   const [
     projectCount,
@@ -25,6 +33,11 @@ export default async function DashboardPage() {
     upcomingDeadlines,
     inProgressApps,
     recentApplications,
+    expiringDocuments,
+    stalledApplications,
+    openChangeRequests,
+    sentAndBeyondApps,
+    prepTimeApps,
   ] = await Promise.all([
     prisma.project.count({ where: orgWhere }),
     prisma.fundingOpportunity.count({ where: { ...orgWhere, status: "مفتوحة" } }),
@@ -50,6 +63,35 @@ export default async function DashboardPage() {
       take: 5,
       include: { project: true },
     }),
+    prisma.orgDocument.findMany({
+      where: { ...orgWhere, expiryDate: { lte: docsSoon } },
+      orderBy: { expiryDate: "asc" },
+      take: 8,
+    }),
+    prisma.grantApplication.findMany({
+      where: { ...orgWhere, status: { in: ACTIVE_APP_STATUSES }, updatedAt: { lte: stalledCutoff } },
+      include: { project: true },
+      orderBy: { updatedAt: "asc" },
+      take: 8,
+    }),
+    prisma.applicationComment.findMany({
+      where: {
+        status: "OPEN",
+        kind: "CHANGE_REQUEST",
+        application: { organizationId: session.organizationId, status: { notIn: ["مقبول", "مرفوض", "مؤجل"] } },
+      },
+      include: { application: { select: { id: true, title: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+    }),
+    prisma.grantApplication.findMany({
+      where: { ...orgWhere, status: { in: ["تم الإرسال", "مقبول", "مرفوض"] }, opportunityId: { not: null } },
+      include: { opportunity: { select: { expectedAmount: true } } },
+    }),
+    prisma.grantApplication.findMany({
+      where: { ...orgWhere, statusHistory: { some: { toStatus: "تم الإرسال" } } },
+      select: { createdAt: true, statusHistory: { where: { toStatus: "تم الإرسال" }, orderBy: { createdAt: "asc" }, take: 1, select: { createdAt: true } } },
+    }),
   ]);
 
   const totalDecided = acceptedApps + rejectedApps;
@@ -58,6 +100,16 @@ export default async function DashboardPage() {
   const incompleteApps = inProgressApps
     .map((a) => ({ app: a, completion: computeCompletion(a) }))
     .filter((x) => x.completion.percent < 100);
+
+  const requestedTotal = sentAndBeyondApps.reduce((sum, a) => sum + (a.opportunity?.expectedAmount || 0), 0);
+  const acceptedTotal = sentAndBeyondApps
+    .filter((a) => a.status === "مقبول")
+    .reduce((sum, a) => sum + (a.opportunity?.expectedAmount || 0), 0);
+
+  const prepDurations = prepTimeApps
+    .filter((a) => a.statusHistory.length > 0)
+    .map((a) => (a.statusHistory[0].createdAt.getTime() - a.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+  const avgPrepDays = prepDurations.length > 0 ? Math.round(prepDurations.reduce((s, d) => s + d, 0) / prepDurations.length) : null;
 
   return (
     <div>
@@ -78,6 +130,20 @@ export default async function DashboardPage() {
           tone="gold"
         />
         <StatCard label="مواعيد قريبة (14 يومًا)" value={upcomingDeadlines.length} icon={AlertTriangle} tone="red" />
+        <StatCard
+          label="متوسط زمن التحضير"
+          value={avgPrepDays !== null ? `${avgPrepDays} يومًا` : "—"}
+          hint="من إنشاء الطلب حتى إرساله"
+          icon={Timer}
+          tone="blue"
+        />
+        <StatCard
+          label="التمويل المطلوب / المقبول"
+          value={`${formatMoney(requestedTotal)} / ${formatMoney(acceptedTotal)}`}
+          hint="إجمالي قيمة الفرص المرتبطة بالطلبات المرسلة"
+          icon={Wallet}
+          tone="gold"
+        />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -138,6 +204,78 @@ export default async function DashboardPage() {
                         {completion.missing.length > 3 && " ..."}
                       </p>
                     )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <div className="card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-black text-ink">مستندات تنتهي صلاحيتها</p>
+            <Link href="/settings/organization" className="text-xs font-bold text-brand-600 hover:underline">
+              مكتبة المستندات
+            </Link>
+          </div>
+          {expiringDocuments.length === 0 ? (
+            <EmptyState icon={FolderOpen} title="لا توجد مستندات تنتهي صلاحيتها قريبًا" />
+          ) : (
+            <ul className="space-y-2">
+              {expiringDocuments.map((d) => {
+                const v = documentValidity(d.expiryDate);
+                return (
+                  <li key={d.id} className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm">
+                    <p className="font-bold text-ink">{d.title}</p>
+                    <div className="mt-1 flex items-center justify-between text-xs">
+                      <span className="text-slate-400">{d.category}</span>
+                      <span className={v.tone === "danger" ? "font-bold text-red-600" : "font-bold text-amber-600"}>{v.label}</span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-black text-ink">طلبات متوقفة (بلا تحديث {STALLED_AFTER_DAYS}+ يومًا)</p>
+          </div>
+          {stalledApplications.length === 0 ? (
+            <EmptyState icon={Clock} title="لا توجد طلبات متوقفة حاليًا" />
+          ) : (
+            <ul className="space-y-2">
+              {stalledApplications.map((a) => (
+                <li key={a.id}>
+                  <Link href={`/applications/${a.id}`} className="block rounded-lg border border-slate-200 px-3 py-2.5 text-sm hover:bg-brand-50">
+                    <p className="font-bold text-ink">{a.title}</p>
+                    <div className="mt-1 flex items-center justify-between text-xs">
+                      <Badge label={a.status} colorClass={STATUS_COLORS[a.status]} />
+                      <span className="text-slate-400">آخر تحديث {formatDate(a.updatedAt)}</span>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-black text-ink">طلبات تعديل مفتوحة تحتاج إجراء</p>
+          </div>
+          {openChangeRequests.length === 0 ? (
+            <EmptyState icon={MessageSquare} title="لا توجد طلبات تعديل مفتوحة" />
+          ) : (
+            <ul className="space-y-2">
+              {openChangeRequests.map((c) => (
+                <li key={c.id}>
+                  <Link href={`/applications/${c.application.id}`} className="block rounded-lg border border-amber-200 bg-amber-50/40 px-3 py-2.5 text-sm hover:bg-amber-50">
+                    <p className="font-bold text-ink">{c.application.title}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-slate-500">{c.body}</p>
                   </Link>
                 </li>
               ))}
