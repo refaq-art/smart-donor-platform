@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@libsql/client";
+import { createClient } from "@libsql/client/web";
 import { prisma } from "@/lib/prisma";
 import { seedDemoData } from "@/lib/seed-data";
 import { TURSO_INIT_SQL } from "@/lib/turso-init-sql";
 
 // نقطة تهيئة سحابية لمرة واحدة: تُنشئ جداول قاعدة بيانات Turso (إن لم تكن موجودة)
 // ثم تُعبّئ البيانات التجريبية فقط إذا كانت قاعدة البيانات فارغة تمامًا — لا تلمس
-// أي بيانات حقيقية موجودة. مُعطَّلة تمامًا ما لم يُضبط BOOTSTRAP_SECRET، وتتطلب
-// تمرير نفس القيمة في ترويسة x-bootstrap-secret. راجع قسم "النشر السحابي المجاني"
-// في README.md.
-export async function POST(request: NextRequest) {
+// أي بيانات حقيقية موجودة. مُعطَّلة تمامًا ما لم يُضبط BOOTSTRAP_SECRET. يقبل السر
+// إما عبر ترويسة x-bootstrap-secret (POST) أو معامل استعلام ?secret= (GET، لتشغيلها
+// مباشرة من المتصفح دون أدوات إضافية). راجع قسم "النشر السحابي المجاني" في README.md.
+async function handleBootstrap(providedSecret: string | null) {
   const secret = process.env.BOOTSTRAP_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "غير مُفعَّلة (BOOTSTRAP_SECRET غير مضبوط)" }, { status: 404 });
   }
 
-  if (request.headers.get("x-bootstrap-secret") !== secret) {
+  if (providedSecret !== secret) {
     return NextResponse.json({ error: "غير مصرَّح" }, { status: 401 });
   }
 
@@ -39,6 +39,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ schemaApplied: true, seeded: true, adminEmail: result.adminEmail, logs });
   } catch (err) {
     const message = err instanceof Error ? err.message : "خطأ غير معروف";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const stack = err instanceof Error ? err.stack : undefined;
+    return NextResponse.json({ error: message, stack }, { status: 500 });
   }
+}
+
+export async function POST(request: NextRequest) {
+  return handleBootstrap(request.headers.get("x-bootstrap-secret"));
+}
+
+export async function GET(request: NextRequest) {
+  return handleBootstrap(request.nextUrl.searchParams.get("secret"));
 }
