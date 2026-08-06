@@ -609,6 +609,36 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
     ],
   });
 
+  log("✨ إنشاء مقترحات مانحين مكتشفة تلقائيًا (توضيحية)...");
+  await prisma.donorLead.createMany({
+    data: [
+      {
+        organizationId: org.id,
+        name: "مؤسسة الرواد الخيرية (مثال توضيحي)",
+        about: "بيانات توضيحية تُحاكي نتيجة اكتشاف آلي حقيقية — تدعم مشاريع تعليمية وتنموية للجمعيات الأهلية.",
+        sector: "تعليمي",
+        city: "الرياض",
+        sourceUrl: "https://example.com/demo-donor-1",
+        sourceSnippet: "مقتطف توضيحي: أعلنت المؤسسة عن فتح باب التقديم لدعم مبادرات تعليمية للجمعيات الأهلية خلال هذا العام.",
+        suggestedProjectId: project1.id,
+        matchReason: "يتوافق مجال دعم الجهة (تعليمي) مع فئة المشروع المقترح.",
+        trendNote: "توجه: زيادة ملحوظة في طلب مؤشرات أداء قابلة للقياس ضمن شروط التقديم.",
+        status: "PENDING",
+        isDemo: true,
+      },
+      {
+        organizationId: org.id,
+        name: "برنامج دعم المبادرات المجتمعية (مثال توضيحي)",
+        about: "بيانات توضيحية — برنامج تمويل صغير يستهدف مشاريع الأمن الغذائي والإغاثة.",
+        sector: "إغاثي",
+        sourceUrl: "https://example.com/demo-donor-2",
+        sourceSnippet: "مقتطف توضيحي: يوفر البرنامج منحًا صغيرة تصل إلى 50,000 ريال لمشاريع الأمن الغذائي.",
+        status: "PENDING",
+        isDemo: true,
+      },
+    ],
+  });
+
   // جمعية ثانية — وجودها ضروري لإثبات عزل البيانات في الاختبارات الآلية
   log("🏢 إنشاء جمعية ثانية للتحقق من العزل...");
   const org2 = await prisma.organization.create({

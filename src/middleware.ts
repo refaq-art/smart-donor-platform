@@ -31,7 +31,10 @@ export async function middleware(req: NextRequest) {
     // نقاط الإدارة/التهيئة تحمي نفسها بـ BOOTSTRAP_SECRET بدل جلسة المستخدم — يجب
     // استثناؤها هنا وإلا أُعيد توجيهها لصفحة الدخول، وهو ما يجعل تهيئة قاعدة
     // البيانات مستحيلة أصلًا (لا يمكن تسجيل الدخول قبل إنشاء الجداول).
-    pathname.startsWith("/api/admin/")
+    pathname.startsWith("/api/admin/") ||
+    // مهام Vercel Cron تحمي نفسها بترويسة CRON_SECRET بدل جلسة المستخدم — بلا
+    // كعكة جلسة أصلًا، فيجب استثناؤها هنا وإلا رُفضت قبل وصولها للتحقق من السر.
+    pathname.startsWith("/api/cron/")
   ) {
     return NextResponse.next();
   }
