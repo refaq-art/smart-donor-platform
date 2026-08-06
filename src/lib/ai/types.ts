@@ -13,6 +13,7 @@ export type AIActionType =
   | "missing_data_checklist"
   | "readiness_assessment"
   | "clarifying_questions"
+  | "extract_donor_lead"
   | "custom";
 
 export type AIRequest = {

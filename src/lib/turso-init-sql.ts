@@ -297,6 +297,27 @@ export const TURSO_STATEMENTS: string[] = [
     CONSTRAINT "ApplicationVersion_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
   )`,
 
+  `CREATE TABLE IF NOT EXISTS "DonorLead" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "organizationId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "about" TEXT,
+    "sector" TEXT,
+    "city" TEXT,
+    "website" TEXT,
+    "sourceUrl" TEXT,
+    "sourceSnippet" TEXT,
+    "suggestedProjectId" TEXT,
+    "matchReason" TEXT,
+    "trendNote" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "isDemo" BOOLEAN NOT NULL DEFAULT false,
+    "discoveredAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "reviewedAt" DATETIME,
+    CONSTRAINT "DonorLead_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "DonorLead_suggestedProjectId_fkey" FOREIGN KEY ("suggestedProjectId") REFERENCES "Project" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+  )`,
+
   `CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email")`,
   `CREATE INDEX IF NOT EXISTS "BoardMember_organizationId_idx" ON "BoardMember"("organizationId")`,
   `CREATE INDEX IF NOT EXISTS "OrgDocument_organizationId_idx" ON "OrgDocument"("organizationId")`,
@@ -304,6 +325,8 @@ export const TURSO_STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS "EligibilityCriterion_opportunityId_idx" ON "EligibilityCriterion"("opportunityId")`,
   `CREATE INDEX IF NOT EXISTS "ApplicationComment_applicationId_idx" ON "ApplicationComment"("applicationId")`,
   `CREATE INDEX IF NOT EXISTS "ApplicationVersion_applicationId_idx" ON "ApplicationVersion"("applicationId")`,
+  `CREATE INDEX IF NOT EXISTS "DonorLead_organizationId_idx" ON "DonorLead"("organizationId")`,
+  `CREATE INDEX IF NOT EXISTS "DonorLead_status_idx" ON "DonorLead"("status")`,
 
   // ── ترقية جدول Organization القائم (الحقول المضافة لملف الجمعية المركزي) ──
   `ALTER TABLE "Organization" ADD COLUMN "licenseDate" DATETIME`,

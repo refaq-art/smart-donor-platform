@@ -94,6 +94,7 @@ model Organization {
   documents     OrgDocument[]
   boardMembers  BoardMember[]
   activityLogs  ActivityLog[]
+  donorLeads    DonorLead[]
 }
 
 // أعضاء مجلس الإدارة والفريق التنفيذي
@@ -169,6 +170,7 @@ model Project {
   attachments   Attachment[]
   applications  GrantApplication[]
   opportunities FundingOpportunity[]
+  donorLeadMatches DonorLead[]
 }
 
 model Donor {
@@ -191,6 +193,43 @@ model Donor {
 
   opportunities FundingOpportunity[]
   attachments   Attachment[]
+}
+
+// مانح مُكتشف تلقائيًا عبر البحث اليومي بالذكاء الاصطناعي (src/lib/donor-discovery.ts).
+// يبقى "مقترحًا" (PENDING) حتى يراجعه مستخدم بشري ويحوّله يدويًا إلى Donor فعلي —
+// المساعد الذكي لا يُدرج بيانات في جداول الجمعية الحقيقية دون مراجعة بشرية.
+model DonorLead {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name  String
+  about String?
+  sector String?
+  city   String?
+  website String?
+
+  // مصدر الاكتشاف — رابط ونص مقتطف من نتيجة البحث، للتحقق اليدوي من صحة المعلومة
+  sourceUrl     String?
+  sourceSnippet String?
+
+  // اقتراح المشروع الأنسب لرفعه لهذا المانح (اختياري، null إن لم يظهر تطابق واضح)
+  suggestedProjectId String?
+  suggestedProject   Project? @relation(fields: [suggestedProjectId], references: [id], onDelete: SetNull)
+  matchReason        String?
+
+  // ملاحظة اتجاه/توجه عام لاحظه المساعد الذكي أثناء هذا الاكتشاف (اختياري)
+  trendNote String?
+
+  // PENDING = مقترح ينتظر المراجعة | ADDED = أُضيف كمانح فعلي | DISMISSED = تم تجاهله
+  status String @default("PENDING")
+
+  isDemo      Boolean  @default(false)
+  discoveredAt DateTime @default(now())
+  reviewedAt  DateTime?
+
+  @@index([organizationId])
+  @@index([status])
 }
 
 model FundingOpportunity {

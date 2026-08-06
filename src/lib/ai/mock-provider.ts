@@ -171,6 +171,22 @@ export const mockProvider: AIProvider = {
             : "لا توجد نقاط ناقصة واضحة تستدعي أسئلة توضيحية حاليًا.";
         break;
       }
+      case "extract_donor_lead": {
+        const title = ctx(context, "title");
+        // الوضع التجريبي لا يستخلص بيانات حقيقية من الويب — يعيد نتيجة توضيحية واضحة المصدر
+        // حتى يعمل مسار الاختبار كاملًا محليًا دون مفتاح ذكاء اصطناعي حقيقي.
+        text = JSON.stringify({
+          isDonorRelevant: Boolean(title),
+          donorName: title ? `جهة تجريبية (Mock): ${title.slice(0, 40)}` : null,
+          about: title ? "بيانات توضيحية مبنية على عنوان نتيجة البحث فقط — راجع المصدر قبل الاعتماد عليها." : null,
+          sector: null,
+          city: null,
+          matchProjectId: null,
+          matchReason: null,
+          trendNote: "الوضع التجريبي لا يحلل توجهات حقيقية.",
+        });
+        break;
+      }
       default: {
         text = "لم أتمكن من تحديد نوع المساعدة المطلوبة.";
       }

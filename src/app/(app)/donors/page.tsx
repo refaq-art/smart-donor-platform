@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/authz";
 import { canEdit } from "@/lib/roles";
 import { PageHeader, EmptyState, Badge, Pagination } from "@/components/ui-bits";
+import DonorLeadsPanel from "@/components/donor-leads-panel";
+import { runDonorDiscoveryAction, addDonorLeadAsDonorAction, dismissDonorLeadAction } from "@/app/actions/donor-discovery";
 import { DONOR_TYPES, DONOR_RELATIONSHIP_STATUSES } from "@/lib/constants";
 import { HandCoins, Plus, Phone, Mail } from "lucide-react";
 import type { Prisma } from "@prisma/client";
@@ -35,7 +37,7 @@ export default async function DonorsPage({
   if (sp.type) where.type = sp.type;
   if (sp.status) where.relationshipStatus = sp.status;
 
-  const [donors, total] = await Promise.all([
+  const [donors, total, donorLeads] = await Promise.all([
     prisma.donor.findMany({
       where,
       orderBy: { updatedAt: "desc" },
@@ -44,6 +46,12 @@ export default async function DonorsPage({
       include: { _count: { select: { opportunities: true } } },
     }),
     prisma.donor.count({ where }),
+    prisma.donorLead.findMany({
+      where: { organizationId: session!.organizationId, status: "PENDING" },
+      orderBy: { discoveredAt: "desc" },
+      include: { suggestedProject: { select: { id: true, title: true } } },
+      take: 10,
+    }),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -59,6 +67,14 @@ export default async function DonorsPage({
             </Link>
           )
         }
+      />
+
+      <DonorLeadsPanel
+        leads={donorLeads}
+        editable={canEdit(session?.role)}
+        runAction={runDonorDiscoveryAction}
+        addAction={addDonorLeadAsDonorAction}
+        dismissAction={dismissDonorLeadAction}
       />
 
       <form className="card mb-6 flex flex-wrap items-center gap-3 p-4" method="get">
