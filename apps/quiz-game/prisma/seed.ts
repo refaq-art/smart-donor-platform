@@ -338,6 +338,13 @@ async function main() {
   }
 
   // -------- الأسئلة --------
+  const existingQuestionCount = await prisma.question.count();
+  if (existingQuestionCount > 0) {
+    console.log(`↷ تخطي زراعة الأسئلة — يوجد ${existingQuestionCount} سؤال بالفعل`);
+    console.log('🎉 اكتملت زراعة البيانات بنجاح!');
+    return;
+  }
+
   let inserted = 0;
   for (const q of QUESTIONS) {
     const categoryId = categoryByKey.get(q.categoryKey);
