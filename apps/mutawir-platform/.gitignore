@@ -10,3 +10,5 @@ prisma/dev.db-journal
 public/uploads/*
 !public/uploads/.gitkeep
 .DS_Store
+test-results
+playwright-report

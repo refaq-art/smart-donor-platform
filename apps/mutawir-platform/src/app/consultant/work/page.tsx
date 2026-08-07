@@ -48,7 +48,7 @@ export default async function ConsultantWorkCenterPage() {
 
 function WorkCard({ title, href, active, children }: { title: string; href: string; active: boolean; children: React.ReactNode }) {
   return (
-    <Link href={href} className={`card block transition hover:shadow-md ${active ? "border-r-4 border-r-gold-500" : "opacity-60"}`}>
+    <Link href={href} className={`card block transition hover:shadow-md ${active ? "border-r-4 border-r-navy-600" : "opacity-60"}`}>
       <div className="mb-1 font-bold text-navy-900">{title}</div>
       <div className="text-xs text-slate-500">{children}</div>
     </Link>

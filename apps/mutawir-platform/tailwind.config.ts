@@ -5,23 +5,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Sampled directly from the platform logo's gradient bars/wordmark
+        // so the UI's navy matches the mark exactly, not an approximation.
         navy: {
-          50: "#eef1f8",
-          100: "#d7ddef",
-          200: "#b0bbdf",
-          300: "#8494c8",
-          400: "#5769ac",
-          500: "#3b4d8f",
-          600: "#2c3c72",
-          700: "#212d59",
-          800: "#161d3e",
-          900: "#0e1329",
-          950: "#080b1a",
-        },
-        gold: {
-          400: "#e2b04a",
-          500: "#c99a34",
-          600: "#a97e24",
+          50: "#eef1f7",
+          100: "#dbe2ee",
+          200: "#b7c5dd",
+          300: "#8fa4c7",
+          400: "#6483ad",
+          500: "#4b6598",
+          600: "#395386",
+          700: "#273d6c",
+          800: "#14264c",
+          900: "#0b1730",
+          950: "#050b1d",
         },
       },
       fontFamily: {

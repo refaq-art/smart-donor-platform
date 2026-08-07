@@ -2,17 +2,19 @@
 
 import { useActionState } from "react";
 import { loginAction } from "@/app/actions/auth-actions";
-import { BrandMark } from "@/components/brand-mark";
+import { BrandLockup } from "@/components/brand-lockup";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(loginAction, undefined);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-navy-950 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-navy-50 to-white px-4 py-10">
       <div className="w-full max-w-md">
-        <div className="mb-8 flex justify-center">
-          <BrandMark size="lg" withTagline />
+        <div className="mb-6 flex justify-center">
+          <BrandLockup withTagline={false} />
         </div>
+        <div className="mb-8 text-center text-sm font-medium text-navy-600">من القياس إلى الأثر</div>
+
         <form action={formAction} className="card space-y-4">
           <h1 className="text-lg font-bold text-slate-800">تسجيل الدخول</h1>
           {state?.error && (
@@ -30,8 +32,9 @@ export default function LoginPage() {
             {pending ? "جارٍ الدخول..." : "دخول"}
           </button>
         </form>
-        <div className="mt-6 rounded-xl bg-navy-900/60 p-4 text-xs leading-relaxed text-navy-100">
-          <div className="mb-1 font-semibold text-gold-400">حسابات تجريبية</div>
+
+        <div className="mt-6 rounded-xl border border-navy-100 bg-navy-50 p-4 text-xs leading-relaxed text-navy-700">
+          <div className="mb-1 font-semibold text-navy-800">حسابات تجريبية</div>
           admin@mutawir.sa · consultant@mutawir.sa · council@mutawir.sa · org@mutawir.sa
           <br />
           كلمة المرور للجميع: Mutawir@2026

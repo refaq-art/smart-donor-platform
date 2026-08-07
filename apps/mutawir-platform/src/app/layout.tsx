@@ -11,6 +11,10 @@ const font = IBM_Plex_Sans_Arabic({
 export const metadata: Metadata = {
   title: "مُطوّر — من القياس إلى الأثر",
   description: "منصة قياس وتطوير الجمعيات الأهلية عبر برنامج تطوير 100 يوم",
+  icons: {
+    icon: [{ url: "/brand/icon-32.png", sizes: "32x32", type: "image/png" }],
+    apple: [{ url: "/brand/icon-180.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
