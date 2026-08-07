@@ -1,0 +1,437 @@
+// ==============================================================
+// Arabic Quiz Arena — Prisma Schema (PostgreSQL)
+// ==============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------
+
+enum UserRole {
+  PLAYER
+  ADMIN
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  WORD_GUESS
+  CHARACTER_GUESS
+  ORDERING
+  IMAGE_CHOICE
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+enum QuestionStatus {
+  ACTIVE
+  DISABLED
+  PENDING_REVIEW
+  REJECTED
+}
+
+enum QuestionSource {
+  MANUAL
+  AI_GENERATED
+  IMPORTED
+}
+
+enum GameMode {
+  QUICK_PLAY
+  CLASSIC
+  TIME_ATTACK
+  ELIMINATION
+  TEAM_BATTLE
+  CHALLENGE
+  PARTY
+  ONLINE_ROOM
+  LOCAL_MULTIPLAYER
+}
+
+enum GameFormat {
+  SOLO
+  LOCAL
+  ONLINE
+}
+
+enum GameStatus {
+  WAITING
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+  ELIMINATED
+}
+
+enum RoomStatus {
+  LOBBY
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+}
+
+enum RoomPlayerStatus {
+  CONNECTED
+  DISCONNECTED
+  LEFT
+}
+
+enum AIJobStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// ----------------------------------------------------------------
+// Identity
+// ----------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(PLAYER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  player Player?
+
+  @@map("users")
+}
+
+model Player {
+  id            String   @id @default(cuid())
+  userId        String?  @unique
+  isGuest       Boolean  @default(true)
+  displayName   String
+  avatarEmoji   String   @default("🦁")
+  avatarColor   String   @default("#7c5cff")
+  totalScore    Int      @default(0)
+  gamesPlayed   Int      @default(0)
+  gamesWon      Int      @default(0)
+  correctAnswers Int     @default(0)
+  totalAnswers  Int      @default(0)
+  bestStreak    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user               User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameSessions       GameSession[]
+  roomPlayers        RoomPlayer[]
+  hostedRooms        Room[]              @relation("RoomHost")
+  results            Result[]
+  playerAchievements PlayerAchievement[]
+  createdQuestions   Question[]          @relation("QuestionCreatedBy")
+  aiJobs             AIGenerationJob[]
+
+  @@index([totalScore])
+  @@map("players")
+}
+
+// ----------------------------------------------------------------
+// Content: categories / questions / answers
+// ----------------------------------------------------------------
+
+model Category {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  nameAr      String
+  icon        String   @default("🎯")
+  colorHex    String   @default("#7c5cff")
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  questions Question[]
+
+  @@map("categories")
+}
+
+model Question {
+  id              String         @id @default(cuid())
+  categoryId      String
+  type            QuestionType
+  difficulty      Difficulty
+  textAr          String
+  imageUrl        String?
+  explanationAr   String?
+  timeLimitSeconds Int           @default(20)
+  basePoints      Int            @default(1000)
+  status          QuestionStatus @default(ACTIVE)
+  source          QuestionSource @default(MANUAL)
+  aiJobId         String?
+  createdById     String?
+  timesUsed       Int            @default(0)
+  timesCorrect    Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  category    Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdBy   Player?          @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  aiJob       AIGenerationJob? @relation(fields: [aiJobId], references: [id], onDelete: SetNull)
+  answers     Answer[]
+  rounds      Round[]
+  scores      Score[]
+
+  @@index([categoryId, difficulty, status])
+  @@index([type, status])
+  @@map("questions")
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  questionId String
+  textAr     String
+  imageUrl   String?
+  isCorrect  Boolean  @default(false)
+  orderIndex Int?
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("answers")
+}
+
+model AIGenerationJob {
+  id            String      @id @default(cuid())
+  requestedById String?
+  categoryId    String?
+  difficulty    Difficulty?
+  type          QuestionType?
+  language      String      @default("ar")
+  requestedCount Int
+  generatedCount Int        @default(0)
+  status        AIJobStatus @default(PENDING)
+  errorMessage  String?
+  createdAt     DateTime    @default(now())
+  completedAt   DateTime?
+
+  requestedBy Player?    @relation(fields: [requestedById], references: [id], onDelete: SetNull)
+  questions   Question[]
+
+  @@map("ai_generation_jobs")
+}
+
+// ----------------------------------------------------------------
+// Gameplay: games / rounds / sessions / scores
+// ----------------------------------------------------------------
+
+model Game {
+  id                    String     @id @default(cuid())
+  mode                  GameMode
+  format                GameFormat
+  status                GameStatus @default(WAITING)
+  categoryIds           Json
+  difficulty            Difficulty?
+  adaptiveDifficulty    Boolean    @default(false)
+  questionCount         Int        @default(10)
+  timePerQuestionSeconds Int       @default(20)
+  teamsEnabled          Boolean    @default(false)
+  negativeScoring       Boolean    @default(false)
+  roomId                String?    @unique
+  createdAt             DateTime   @default(now())
+  startedAt             DateTime?
+  endedAt               DateTime?
+
+  room     Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  rounds   Round[]
+  sessions GameSession[]
+  results  Result[]
+  teams    Team[]
+
+  @@map("games")
+}
+
+model Round {
+  id               String    @id @default(cuid())
+  gameId           String
+  questionId       String
+  roundNumber      Int
+  timeLimitSeconds Int       @default(20)
+  startedAt        DateTime?
+  endedAt          DateTime?
+
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  scores   Score[]
+
+  @@unique([gameId, roundNumber])
+  @@map("rounds")
+}
+
+model Team {
+  id         String @id @default(cuid())
+  gameId     String
+  name       String
+  colorHex   String @default("#3b82f6")
+  totalScore Int    @default(0)
+
+  game         Game          @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameSessions GameSession[]
+
+  @@map("teams")
+}
+
+model GameSession {
+  id               String     @id @default(cuid())
+  gameId           String
+  playerId         String
+  teamId           String?
+  score            Int        @default(0)
+  streak           Int        @default(0)
+  bestStreak       Int        @default(0)
+  correctCount     Int        @default(0)
+  wrongCount       Int        @default(0)
+  status           GameStatus @default(IN_PROGRESS)
+  currentRoundIndex Int       @default(0)
+  localSlot        Int?
+  joinedAt         DateTime   @default(now())
+  finishedAt       DateTime?
+
+  game   Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  scores Score[]
+
+  @@index([gameId])
+  @@index([playerId])
+  @@map("game_sessions")
+}
+
+model Score {
+  id             String   @id @default(cuid())
+  gameSessionId  String
+  roundId        String
+  questionId     String
+  isCorrect      Boolean
+  pointsEarned   Int
+  breakdown      Json
+  answerTimeMs   Int
+  streakAtAnswer Int
+  selectedAnswer Json?
+  createdAt      DateTime @default(now())
+
+  gameSession GameSession @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
+  round       Round       @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([gameSessionId])
+  @@map("scores")
+}
+
+model Result {
+  id             String   @id @default(cuid())
+  gameId         String
+  playerId       String
+  teamId         String?
+  rank           Int
+  totalScore     Int
+  correctAnswers Int
+  totalAnswers   Int
+  bestStreak     Int
+  isWinner       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+  @@index([gameId])
+  @@map("results")
+}
+
+// ----------------------------------------------------------------
+// Online rooms
+// ----------------------------------------------------------------
+
+model Room {
+  id                     String     @id @default(cuid())
+  code                   String     @unique
+  hostPlayerId           String
+  status                 RoomStatus @default(LOBBY)
+  mode                   GameMode   @default(CLASSIC)
+  categoryIds            Json
+  difficulty             Difficulty?
+  adaptiveDifficulty     Boolean    @default(false)
+  questionCount          Int        @default(10)
+  timePerQuestionSeconds Int        @default(20)
+  teamsEnabled           Boolean    @default(false)
+  negativeScoring        Boolean    @default(false)
+  maxPlayers             Int        @default(12)
+  createdAt              DateTime   @default(now())
+  startedAt              DateTime?
+  closedAt               DateTime?
+
+  host    Player       @relation("RoomHost", fields: [hostPlayerId], references: [id], onDelete: Cascade)
+  players RoomPlayer[]
+  game    Game?
+
+  @@map("rooms")
+}
+
+enum RoomTeam {
+  A
+  B
+}
+
+model RoomPlayer {
+  id       String           @id @default(cuid())
+  roomId   String
+  playerId String
+  teamKey  RoomTeam?
+  isHost   Boolean          @default(false)
+  isReady  Boolean          @default(false)
+  status   RoomPlayerStatus @default(CONNECTED)
+  joinedAt DateTime         @default(now())
+  leftAt   DateTime?
+
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, playerId])
+  @@map("room_players")
+}
+
+// ----------------------------------------------------------------
+// Achievements
+// ----------------------------------------------------------------
+
+model Achievement {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  nameAr        String
+  descriptionAr String
+  icon          String   @default("🏆")
+  criteria      Json
+  createdAt     DateTime @default(now())
+
+  playerAchievements PlayerAchievement[]
+
+  @@map("achievements")
+}
+
+model PlayerAchievement {
+  id            String   @id @default(cuid())
+  playerId      String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  player      Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, achievementId])
+  @@map("player_achievements")
+}
