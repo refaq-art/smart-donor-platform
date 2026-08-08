@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Tajawal, Baloo_Bhaijaan_2 } from 'next/font/google';
 import { PlayerProvider } from '@/components/providers/player-provider';
 import { SoundProvider } from '@/components/providers/sound-provider';
+import { ServiceWorkerRegister } from '@/components/providers/sw-register';
 import { Navbar } from '@/components/layout/navbar';
 import './globals.css';
 
@@ -23,6 +24,19 @@ const baloo = Baloo_Bhaijaan_2({
 export const metadata: Metadata = {
   title: 'حلبة الأسئلة — لعبة مسابقات عربية',
   description: 'لعبة أسئلة ومسابقات عربية تفاعلية للعائلة والأصدقاء — فردي، محلي، وأونلاين مع الأصدقاء عبر غرف خاصة.',
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'حلبة الأسئلة',
+  },
 };
 
 export const viewport: Viewport = {
@@ -36,6 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={`${tajawal.variable} ${baloo.variable}`}>
       <body>
+        <ServiceWorkerRegister />
         <PlayerProvider>
           <SoundProvider>
             <Navbar />

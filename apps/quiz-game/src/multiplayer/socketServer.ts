@@ -8,11 +8,16 @@ import { startRoomGame } from '@/server/room/startRoomGame';
 import { getGameState } from '@/server/game/state';
 import { authenticateSocket } from './socketAuth';
 import { scheduleRoundTimeout, clearRoundTimeout } from './roundTimers';
+import { ALLOWED_ROOM_REACTIONS } from './types';
 import type { ClientToServerEvents, ServerToClientEvents } from './types';
 import type { RoundState, PlayerResultRow } from '@/server/game/types';
 
 const REVEAL_DELAY_MS = 4500;
 const TIMEOUT_GRACE_MS = 2500;
+const CHAT_COOLDOWN_MS = 1200;
+const REACTION_COOLDOWN_MS = 400;
+const MAX_CHAT_LENGTH = 200;
+const ALLOWED_REACTIONS = new Set<string>(ALLOWED_ROOM_REACTIONS);
 
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -21,7 +26,16 @@ interface SocketData {
   playerId: string;
   roomCode?: string;
   roomId?: string;
+  isSpectator?: boolean;
+  displayName?: string;
+  avatarEmoji?: string;
+  lastChatAt?: number;
+  lastReactionAt?: number;
 }
+
+// متفرجو كل غرفة (بمعرّف الاتصال Socket) — عابرون وغير محفوظين في قاعدة البيانات عمدًا،
+// لأن المشاهدة لا تُغيّر حالة اللعبة ولا تُحتسب ضمن سعة الغرفة.
+const spectatorsByRoom = new Map<string, Set<string>>();
 
 export function initSocketServer(io: AppServer) {
   io.use(async (socket, next) => {
@@ -42,12 +56,49 @@ export function initSocketServer(io: AppServer) {
         const roomId = await joinRoom(code, data.playerId);
         data.roomCode = code.toUpperCase();
         data.roomId = roomId;
+        data.isSpectator = false;
+        await cacheProfile(data);
         socket.join(roomCodeChannel(data.roomCode));
 
         await broadcastRoomState(io, data.roomCode);
 
         const room = await getRoomByCode(data.roomCode);
         if (room?.status === 'IN_PROGRESS' && room.game) {
+          const currentRound = await getCurrentRoundForReconnect(room.game.id);
+          if (currentRound) {
+            socket.emit('game:round', { round: currentRound, totalRounds: room.game.questionCount });
+          }
+        }
+      } catch (error) {
+        socket.emit('room:error', { message: errorMessage(error) });
+      }
+    });
+
+    socket.on('room:joinSpectator', async ({ code }) => {
+      try {
+        const upperCode = code.toUpperCase();
+        const room = await getRoomByCode(upperCode);
+        if (!room) {
+          socket.emit('room:error', { message: 'لا توجد غرفة بهذا الرمز' });
+          return;
+        }
+        if (room.status === 'CLOSED') {
+          socket.emit('room:error', { message: 'هذه الغرفة لم تعد متاحة' });
+          return;
+        }
+
+        data.roomCode = upperCode;
+        data.roomId = room.id;
+        data.isSpectator = true;
+        await cacheProfile(data);
+
+        socket.join(roomCodeChannel(upperCode));
+        addSpectator(upperCode, socket.id);
+
+        socket.emit('room:state', { room: toRoomView(room) });
+        await broadcastSpectatorCount(io, upperCode);
+
+        if (room.status === 'IN_PROGRESS' && room.game) {
           const currentRound = await getCurrentRoundForReconnect(room.game.id);
           if (currentRound) {
             socket.emit('game:round', { round: currentRound, totalRounds: room.game.questionCount });
@@ -96,15 +147,58 @@ export function initSocketServer(io: AppServer) {
     });
 
     socket.on('room:leave', async () => {
-      if (data.roomId) {
+      const wasSpectator = data.isSpectator;
+      const code = data.roomCode;
+
+      if (data.roomId && !wasSpectator) {
         await leaveRoom(data.roomId, data.playerId);
-        if (data.roomCode) {
-          socket.leave(roomCodeChannel(data.roomCode));
-          await broadcastRoomState(io, data.roomCode);
+      }
+      if (code) {
+        socket.leave(roomCodeChannel(code));
+        if (wasSpectator) {
+          removeSpectator(code, socket.id);
+          await broadcastSpectatorCount(io, code);
+        } else {
+          await broadcastRoomState(io, code);
         }
       }
       data.roomId = undefined;
       data.roomCode = undefined;
+      data.isSpectator = false;
+    });
+
+    socket.on('room:chat', ({ text }) => {
+      if (!data.roomCode) return;
+      const trimmed = (text ?? '').trim().slice(0, MAX_CHAT_LENGTH);
+      if (!trimmed) return;
+
+      const now = Date.now();
+      if (data.lastChatAt && now - data.lastChatAt < CHAT_COOLDOWN_MS) return;
+      data.lastChatAt = now;
+
+      io.to(roomCodeChannel(data.roomCode)).emit('room:chat', {
+        id: `${socket.id}-${now}`,
+        fromPlayerId: data.isSpectator ? null : data.playerId,
+        displayName: data.displayName ?? 'لاعب',
+        avatarEmoji: data.avatarEmoji ?? '🙂',
+        isSpectator: !!data.isSpectator,
+        text: trimmed,
+        at: new Date(now).toISOString(),
+      });
+    });
+
+    socket.on('room:reaction', ({ emoji }) => {
+      if (!data.roomCode || !ALLOWED_REACTIONS.has(emoji)) return;
+
+      const now = Date.now();
+      if (data.lastReactionAt && now - data.lastReactionAt < REACTION_COOLDOWN_MS) return;
+      data.lastReactionAt = now;
+
+      io.to(roomCodeChannel(data.roomCode)).emit('room:reaction', {
+        displayName: data.displayName ?? 'لاعب',
+        avatarEmoji: data.avatarEmoji ?? '🙂',
+        emoji,
+      });
     });
 
     socket.on('game:answer', async (payload, ack) => {
@@ -153,12 +247,47 @@ export function initSocketServer(io: AppServer) {
     });
 
     socket.on('disconnect', async () => {
-      if (data.roomId && data.roomCode) {
+      if (!data.roomCode) return;
+
+      if (data.isSpectator) {
+        removeSpectator(data.roomCode, socket.id);
+        await broadcastSpectatorCount(io, data.roomCode);
+        return;
+      }
+
+      if (data.roomId) {
         await markDisconnected(data.roomId, data.playerId);
         await broadcastRoomState(io, data.roomCode);
       }
     });
   });
+}
+
+async function cacheProfile(data: SocketData) {
+  const profile = await prisma.player.findUnique({ where: { id: data.playerId }, select: { displayName: true, avatarEmoji: true } });
+  data.displayName = profile?.displayName ?? (data.isSpectator ? 'مشاهد' : 'لاعب');
+  data.avatarEmoji = profile?.avatarEmoji ?? (data.isSpectator ? '👀' : '🙂');
+}
+
+function addSpectator(code: string, socketId: string) {
+  let set = spectatorsByRoom.get(code);
+  if (!set) {
+    set = new Set();
+    spectatorsByRoom.set(code, set);
+  }
+  set.add(socketId);
+}
+
+function removeSpectator(code: string, socketId: string) {
+  const set = spectatorsByRoom.get(code);
+  if (!set) return;
+  set.delete(socketId);
+  if (set.size === 0) spectatorsByRoom.delete(code);
+}
+
+async function broadcastSpectatorCount(io: AppServer, code: string) {
+  const count = spectatorsByRoom.get(code)?.size ?? 0;
+  io.to(roomCodeChannel(code)).emit('room:spectatorCount', { count });
 }
 
 function roomCodeChannel(code: string) {

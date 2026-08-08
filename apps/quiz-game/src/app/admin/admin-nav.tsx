@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ListChecks, Tags, FileUp, Sparkles, ClipboardCheck } from 'lucide-react';
+import { LayoutDashboard, ListChecks, Tags, FileUp, Sparkles, ClipboardCheck, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ITEMS = [
   { href: '/admin', label: 'نظرة عامة', icon: LayoutDashboard },
   { href: '/admin/questions', label: 'الأسئلة', icon: ListChecks },
   { href: '/admin/categories', label: 'التصنيفات', icon: Tags },
+  { href: '/admin/tournaments', label: 'البطولات', icon: Trophy },
   { href: '/admin/import-export', label: 'استيراد / تصدير', icon: FileUp },
   { href: '/admin/ai-generate', label: 'توليد بالذكاء الاصطناعي', icon: Sparkles },
   { href: '/admin/ai-generate/review', label: 'مراجعة المولّد', icon: ClipboardCheck },

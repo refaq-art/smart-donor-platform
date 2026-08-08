@@ -1,12 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Crown, Home, RotateCcw } from 'lucide-react';
+import { Crown, Home, RotateCcw, Share2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ACHIEVEMENT_DEFINITIONS } from '@/lib/constants';
 import { accuracyPercent } from '@/lib/utils';
+import { shareOrDownloadResultImage } from '@/lib/share-image';
 import type { PlayerResultRow } from '@/server/game/types';
 
 const PODIUM_COLORS = ['#ffd700', '#c0c0c0', '#cd7f32'];
@@ -15,6 +17,17 @@ export function FinalResults({ results, onPlayAgain }: { results: PlayerResultRo
   const podium = results.slice(0, 3);
   const rest = results.slice(3);
   const achievementByKey = new Map<string, (typeof ACHIEVEMENT_DEFINITIONS)[number]>(ACHIEVEMENT_DEFINITIONS.map((a) => [a.key, a]));
+  const [sharingPlayerId, setSharingPlayerId] = useState<string | null>(null);
+
+  const handleShare = async (player: PlayerResultRow) => {
+    if (sharingPlayerId) return;
+    setSharingPlayerId(player.playerId);
+    try {
+      await shareOrDownloadResultImage(player, results.length);
+    } finally {
+      setSharingPlayerId(null);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center gap-6 py-6">
@@ -88,6 +101,16 @@ export function FinalResults({ results, onPlayAgain }: { results: PlayerResultRo
                   {p.correctAnswers}/{p.totalAnswers} صحيحة ({accuracyPercent(p.correctAnswers, p.totalAnswers)}%)
                 </span>
                 <span>أفضل سلسلة: {p.bestStreak}</span>
+                <button
+                  type="button"
+                  data-testid="share-result-button"
+                  onClick={() => handleShare(p)}
+                  disabled={sharingPlayerId !== null}
+                  className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 font-bold text-white transition hover:bg-white/20 disabled:opacity-50"
+                  aria-label={`مشاركة نتيجة ${p.displayName}`}
+                >
+                  <Share2 size={12} /> {sharingPlayerId === p.playerId ? 'جارٍ التجهيز...' : 'مشاركة'}
+                </button>
               </div>
               {p.newAchievements.length > 0 && (
                 <div className="flex w-full flex-wrap gap-2">

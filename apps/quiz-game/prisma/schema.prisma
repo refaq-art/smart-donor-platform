@@ -94,6 +94,11 @@ enum AIJobStatus {
   FAILED
 }
 
+enum TournamentStatus {
+  SCHEDULED
+  CANCELLED
+}
+
 // ----------------------------------------------------------------
 // Identity
 // ----------------------------------------------------------------
@@ -135,6 +140,7 @@ model Player {
   playerAchievements PlayerAchievement[]
   createdQuestions   Question[]          @relation("QuestionCreatedBy")
   aiJobs             AIGenerationJob[]
+  tournamentEntries  TournamentParticipant[]
 
   @@index([totalScore])
   @@map("players")
@@ -154,7 +160,8 @@ model Category {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
-  questions Question[]
+  questions   Question[]
+  tournaments Tournament[]
 
   @@map("categories")
 }
@@ -242,16 +249,19 @@ model Game {
   teamsEnabled          Boolean    @default(false)
   negativeScoring       Boolean    @default(false)
   roomId                String?    @unique
+  tournamentId          String?
   createdAt             DateTime   @default(now())
   startedAt             DateTime?
   endedAt               DateTime?
 
-  room     Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
-  rounds   Round[]
-  sessions GameSession[]
-  results  Result[]
-  teams    Team[]
+  room       Room?       @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+  rounds     Round[]
+  sessions   GameSession[]
+  results    Result[]
+  teams      Team[]
 
+  @@index([tournamentId])
   @@map("games")
 }
 
@@ -434,4 +444,45 @@ model PlayerAchievement {
 
   @@unique([playerId, achievementId])
   @@map("player_achievements")
+}
+
+// ----------------------------------------------------------------
+// البطولات / الدوري (منافسات مجدولة بلوحة متصدرين خاصة بها)
+// ----------------------------------------------------------------
+
+model Tournament {
+  id            String           @id @default(cuid())
+  nameAr        String
+  descriptionAr String?
+  status        TournamentStatus @default(SCHEDULED)
+  categoryId    String?
+  difficulty    Difficulty?
+  questionCount Int              @default(10)
+  startAt       DateTime
+  endAt         DateTime
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  category     Category?               @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  participants TournamentParticipant[]
+  games        Game[]
+
+  @@index([startAt, endAt])
+  @@map("tournaments")
+}
+
+model TournamentParticipant {
+  id           String   @id @default(cuid())
+  tournamentId String
+  playerId     String
+  bestScore    Int      @default(0)
+  gamesPlayed  Int      @default(0)
+  joinedAt     DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, playerId])
+  @@index([tournamentId, bestScore])
+  @@map("tournament_participants")
 }

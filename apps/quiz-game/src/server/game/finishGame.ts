@@ -143,6 +143,18 @@ export async function finishGame(gameId: string): Promise<PlayerResultRow[]> {
       isWinner,
       newAchievements: newKeys,
     });
+
+    if (game.tournamentId) {
+      const existingEntry = await prisma.tournamentParticipant.findUnique({
+        where: { tournamentId_playerId: { tournamentId: game.tournamentId, playerId: player.id } },
+      });
+      const newBestScore = Math.max(existingEntry?.bestScore ?? 0, session.score);
+      await prisma.tournamentParticipant.upsert({
+        where: { tournamentId_playerId: { tournamentId: game.tournamentId, playerId: player.id } },
+        update: { bestScore: newBestScore, gamesPlayed: { increment: 1 } },
+        create: { tournamentId: game.tournamentId, playerId: player.id, bestScore: session.score, gamesPlayed: 1 },
+      });
+    }
   }
 
   return resultRows.sort((a, b) => a.rank - b.rank);

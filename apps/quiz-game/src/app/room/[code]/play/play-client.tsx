@@ -14,13 +14,14 @@ import { FinalResults } from '@/components/game/final-results';
 import { usePlayer } from '@/components/providers/player-provider';
 import { useSound } from '@/components/providers/sound-provider';
 import { useRoomSocket } from '@/multiplayer/useRoomSocket';
+import { RoomChatPanel } from '@/components/game/room-chat-panel';
 import type { ScoreBreakdown } from '@/game-engine/types';
 
 export function RoomPlayClient({ code }: { code: string }) {
   const router = useRouter();
   const { player } = usePlayer();
   const { play } = useSound();
-  const { room, round, totalRounds, roundComplete, finalResults, liveScores, submitAnswer } = useRoomSocket(code);
+  const { room, round, totalRounds, roundComplete, finalResults, liveScores, reactions, spectatorCount, sendReaction, submitAnswer } = useRoomSocket(code);
 
   const [myResult, setMyResult] = useState<{ breakdown: ScoreBreakdown; explanationAr: string | null; selection: AnswerPayload } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -101,7 +102,9 @@ export function RoomPlayClient({ code }: { code: string }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={round.question.imageUrl} alt="" className="mx-auto mb-4 max-h-56 rounded-2xl object-cover" />
           )}
-          <h2 className="text-xl font-extrabold leading-relaxed sm:text-2xl">{round.question.textAr}</h2>
+          <h2 data-testid="question-text" className="text-xl font-extrabold leading-relaxed sm:text-2xl">
+            {round.question.textAr}
+          </h2>
         </div>
 
         <div className="mt-6">
@@ -123,6 +126,10 @@ export function RoomPlayClient({ code }: { code: string }) {
           )}
         </AnimatePresence>
       </Card>
+
+      <div className="mt-4">
+        <RoomChatPanel messages={[]} reactions={reactions} spectatorCount={spectatorCount} onSendReaction={sendReaction} />
+      </div>
     </div>
   );
 }

@@ -149,7 +149,7 @@ export function QuestionForm({ questionId, initial }: { questionId?: string; ini
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <Label>التصنيف</Label>
-            <Select value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}>
+            <Select data-testid="question-category-select" value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}>
               <option value="">اختر تصنيفًا</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -198,7 +198,13 @@ export function QuestionForm({ questionId, initial }: { questionId?: string; ini
 
       <Card>
         <Label>نص السؤال</Label>
-        <Textarea rows={3} value={form.textAr} onChange={(e) => setForm((f) => ({ ...f, textAr: e.target.value }))} placeholder="اكتب نص السؤال هنا..." />
+        <Textarea
+          data-testid="question-text-input"
+          rows={3}
+          value={form.textAr}
+          onChange={(e) => setForm((f) => ({ ...f, textAr: e.target.value }))}
+          placeholder="اكتب نص السؤال هنا..."
+        />
 
         <div className="mt-4">
           <Label>رابط صورة (اختياري)</Label>
@@ -230,7 +236,13 @@ export function QuestionForm({ questionId, initial }: { questionId?: string; ini
               {!isTextType && !isOrdering && (
                 <input type="radio" checked={a.isCorrect} onChange={() => setCorrectSingle(i)} className="h-5 w-5 accent-arena-success" />
               )}
-              <Input value={a.textAr} onChange={(e) => updateAnswer(i, { textAr: e.target.value })} placeholder={`نص الخيار ${i + 1}`} disabled={isTrueFalse} />
+              <Input
+                data-testid={`question-answer-input-${i}`}
+                value={a.textAr}
+                onChange={(e) => updateAnswer(i, { textAr: e.target.value })}
+                placeholder={`نص الخيار ${i + 1}`}
+                disabled={isTrueFalse}
+              />
               {isOrdering && (
                 <div className="flex flex-col">
                   <button type="button" onClick={() => moveAnswer(i, -1)} className="text-white/40 hover:text-white">
@@ -253,7 +265,7 @@ export function QuestionForm({ questionId, initial }: { questionId?: string; ini
 
       {error && <p className="rounded-xl bg-arena-danger/20 px-4 py-2 text-sm text-arena-danger">{error}</p>}
 
-      <Button size="lg" disabled={saving} onClick={save}>
+      <Button size="lg" data-testid="question-save-button" disabled={saving} onClick={save}>
         {saving ? 'جارٍ الحفظ...' : questionId ? 'حفظ التعديلات' : 'إضافة السؤال'}
       </Button>
     </div>

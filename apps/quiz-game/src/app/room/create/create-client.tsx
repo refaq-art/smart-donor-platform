@@ -72,6 +72,7 @@ export function CreateRoomClient() {
           {ROOM_MODES.map((m) => (
             <button
               key={m}
+              data-testid={`room-mode-${m}`}
               onClick={() => setMode(m)}
               className={cn(
                 'flex flex-col items-center gap-1 rounded-xl border-2 p-3 text-center',
@@ -91,6 +92,7 @@ export function CreateRoomClient() {
           {categories.map((c) => (
             <button
               key={c.id}
+              data-testid="room-category-option"
               onClick={() => setCategoryIds((prev) => (prev.includes(c.id) ? prev.filter((x) => x !== c.id) : [...prev, c.id]))}
               disabled={c.questionCount === 0}
               className={cn(
@@ -145,7 +147,7 @@ export function CreateRoomClient() {
 
       {error && <p className="mb-4 rounded-xl bg-arena-danger/20 px-4 py-2 text-sm text-arena-danger">{error}</p>}
 
-      <Button size="xl" className="w-full" disabled={loading} onClick={create}>
+      <Button size="xl" className="w-full" data-testid="create-room-button" disabled={loading} onClick={create}>
         {loading ? <Spinner /> : '🚀 إنشاء الغرفة'}
       </Button>
     </div>

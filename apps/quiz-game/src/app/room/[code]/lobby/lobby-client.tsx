@@ -9,13 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePlayer } from '@/components/providers/player-provider';
 import { useRoomSocket } from '@/multiplayer/useRoomSocket';
+import { RoomChatPanel } from '@/components/game/room-chat-panel';
 import { DIFFICULTY_LABELS, GAME_MODE_LABELS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 export function LobbyClient({ code }: { code: string }) {
   const router = useRouter();
   const { player } = usePlayer();
-  const { room, error, round, setReady, selectTeam, updateSettings, startGame } = useRoomSocket(code);
+  const { room, error, round, chatMessages, reactions, spectatorCount, sendChat, sendReaction, setReady, selectTeam, updateSettings, startGame } =
+    useRoomSocket(code);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -120,16 +122,30 @@ export function LobbyClient({ code }: { code: string }) {
         </Card>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Button size="lg" className="flex-1" variant={me?.isReady ? 'success' : 'outline'} onClick={() => setReady(!me?.isReady)}>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+        <Button
+          size="lg"
+          className="flex-1"
+          data-testid="room-ready-button"
+          variant={me?.isReady ? 'success' : 'outline'}
+          onClick={() => setReady(!me?.isReady)}
+        >
           {me?.isReady ? '✓ جاهز' : 'استعد'}
         </Button>
         {isHost && (
-          <Button size="lg" className="flex-1" disabled={nonHostNotReady.length > 0 || room.players.length < 1} onClick={startGame}>
+          <Button
+            size="lg"
+            className="flex-1"
+            data-testid="room-start-button"
+            disabled={nonHostNotReady.length > 0 || room.players.length < 1}
+            onClick={startGame}
+          >
             🚀 ابدأ المباراة {nonHostNotReady.length > 0 && `(بانتظار ${nonHostNotReady.length})`}
           </Button>
         )}
       </div>
+
+      <RoomChatPanel messages={chatMessages} reactions={reactions} spectatorCount={spectatorCount} onSendChat={sendChat} onSendReaction={sendReaction} />
     </div>
   );
 }

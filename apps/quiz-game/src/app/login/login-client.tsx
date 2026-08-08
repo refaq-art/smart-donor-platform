@@ -67,6 +67,7 @@ export function LoginClient() {
           {(['guest', 'login', 'register'] as Tab[]).map((t) => (
             <button
               key={t}
+              data-testid={`auth-tab-${t}`}
               onClick={() => setTab(t)}
               className={cn(
                 'flex-1 rounded-lg py-2 text-sm font-bold transition',
@@ -95,14 +96,14 @@ export function LoginClient() {
           {(tab === 'login' || tab === 'register') && (
             <div>
               <Label>البريد الإلكتروني</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+              <Input data-testid="email-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
             </div>
           )}
 
           {(tab === 'login' || tab === 'register') && (
             <div>
               <Label>كلمة المرور</Label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+              <Input data-testid="password-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
             </div>
           )}
 

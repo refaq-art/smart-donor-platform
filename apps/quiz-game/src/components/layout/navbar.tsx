@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, LayoutGrid, Trophy, User, ShieldCheck, LogIn } from 'lucide-react';
+import { Home, LayoutGrid, Trophy, Medal, User, ShieldCheck, LogIn } from 'lucide-react';
 import { usePlayer } from '@/components/providers/player-provider';
 import { SoundToggle } from './sound-toggle';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 const LINKS = [
   { href: '/', label: 'الرئيسية', icon: Home },
   { href: '/categories', label: 'التصنيفات', icon: LayoutGrid },
+  { href: '/tournaments', label: 'البطولات', icon: Medal },
   { href: '/leaderboard', label: 'المتصدرون', icon: Trophy },
   { href: '/profile', label: 'ملفي', icon: User },
 ];

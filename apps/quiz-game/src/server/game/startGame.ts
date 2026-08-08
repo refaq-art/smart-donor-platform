@@ -18,6 +18,7 @@ export interface StartGameParams {
   difficulty?: Difficulty | null;
   questionCount?: number;
   roomId?: string | null;
+  tournamentId?: string | null;
   players: StartGamePlayerInput[];
 }
 
@@ -33,7 +34,7 @@ function effectiveTimeLimit(baseSeconds: number, multiplier: number): number {
 }
 
 export async function startGame(params: StartGameParams): Promise<StartGameResult> {
-  const { mode, format, categoryIds, questionCount, roomId, players } = params;
+  const { mode, format, categoryIds, questionCount, roomId, tournamentId, players } = params;
   const config = getModeConfig(mode);
   const isAdaptive = config.adaptiveDifficulty && format === 'SOLO';
   const finalCount = questionCount ?? config.questionCount;
@@ -65,6 +66,7 @@ export async function startGame(params: StartGameParams): Promise<StartGameResul
         teamsEnabled: config.teamsEnabled,
         negativeScoring: config.negativeScoring,
         roomId: roomId ?? null,
+        tournamentId: tournamentId ?? null,
         startedAt: now,
       },
     });

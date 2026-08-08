@@ -87,6 +87,7 @@ export function QuestionsTableClient() {
           <div className="relative sm:col-span-2">
             <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40" />
             <Input
+              data-testid="question-search-input"
               value={search}
               onChange={(e) => {
                 setPage(1);
@@ -162,7 +163,7 @@ export function QuestionsTableClient() {
               </thead>
               <tbody>
                 {items.map((q) => (
-                  <tr key={q.id} className="border-b border-white/5">
+                  <tr key={q.id} data-testid="question-row" className="border-b border-white/5">
                     <td className="max-w-xs truncate p-2 font-bold">{q.textAr}</td>
                     <td className="p-2 text-white/60">
                       {q.category.icon} {q.category.nameAr}

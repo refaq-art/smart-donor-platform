@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>لا يوجد اتصال — حلبة الأسئلة</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: radial-gradient(circle at 50% -20%, #2c2470 0%, #0b0a1f 60%);
+        color: #fff;
+        font-family: 'Tajawal', sans-serif;
+        text-align: center;
+        padding: 24px;
+      }
+      .emoji { font-size: 64px; }
+      h1 { margin: 0; font-size: 22px; }
+      p { margin: 0; color: rgba(255, 255, 255, 0.6); font-size: 15px; max-width: 320px; }
+      button {
+        margin-top: 8px;
+        padding: 10px 24px;
+        border-radius: 999px;
+        border: none;
+        background: linear-gradient(135deg, #7c5cff 0%, #ff5ca8 100%);
+        color: #fff;
+        font-weight: 800;
+        font-size: 15px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="emoji">📡</div>
+    <h1>لا يوجد اتصال بالإنترنت</h1>
+    <p>تحتاج حلبة الأسئلة إلى اتصال بالإنترنت للعب، لأن الأسئلة والنتائج تُدار من الخادم. تحقق من اتصالك وأعد المحاولة.</p>
+    <button onclick="location.reload()">إعادة المحاولة</button>
+  </body>
+</html>
