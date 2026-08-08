@@ -5,16 +5,16 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 export type SoundName = 'tick' | 'correct' | 'wrong' | 'win' | 'click' | 'countdown' | 'levelup';
 
 const SOUND_FILES: Record<SoundName, string> = {
-  tick: '/sounds/tick.mp3',
-  correct: '/sounds/correct.mp3',
-  wrong: '/sounds/wrong.mp3',
-  win: '/sounds/win.mp3',
-  click: '/sounds/click.mp3',
-  countdown: '/sounds/countdown.mp3',
-  levelup: '/sounds/levelup.mp3',
+  tick: '/sounds/tick.wav',
+  correct: '/sounds/correct.wav',
+  wrong: '/sounds/wrong.wav',
+  win: '/sounds/win.wav',
+  click: '/sounds/click.wav',
+  countdown: '/sounds/countdown.wav',
+  levelup: '/sounds/levelup.wav',
 };
 
-const MUSIC_FILE = '/sounds/bg-music.mp3';
+const MUSIC_FILE = '/sounds/bg-music.wav';
 const STORAGE_KEY = 'quiz_sound_muted';
 const MUSIC_STORAGE_KEY = 'quiz_music_enabled';
 

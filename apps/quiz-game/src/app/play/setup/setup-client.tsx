@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play } from 'lucide-react';
+import { Plus, Trash2, Play, UserCheck } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input, Label, Select } from '@/components/ui/input';
@@ -12,7 +12,16 @@ import { Spinner } from '@/components/ui/spinner';
 import { usePlayer } from '@/components/providers/player-provider';
 import { DIFFICULTY_LABELS, GAME_MODE_LABELS, AVATAR_EMOJIS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { getLocalProfiles, saveLocalProfile, type LocalProfile } from '@/lib/local-profiles';
 import type { GameMode } from '@/game-engine/types';
+
+interface LocalPlayerEntry {
+  key: string;
+  displayName: string;
+  existingPlayerId?: string;
+  avatarEmoji?: string;
+  avatarColor?: string;
+}
 
 interface CategoryOption {
   id: string;
@@ -39,7 +48,8 @@ export function SetupClient() {
   });
   const [difficulty, setDifficulty] = useState<string>('');
   const [isLocal, setIsLocal] = useState(() => searchParams.get('local') === '1');
-  const [localPlayers, setLocalPlayers] = useState<string[]>(['لاعب 2']);
+  const [localPlayers, setLocalPlayers] = useState<LocalPlayerEntry[]>([{ key: 'p2', displayName: 'لاعب 2' }]);
+  const [savedProfiles, setSavedProfiles] = useState<LocalProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +57,22 @@ export function SetupClient() {
     fetch('/api/categories')
       .then((r) => r.json())
       .then((data) => setCategories(data.categories));
+    setSavedProfiles(getLocalProfiles());
   }, []);
+
+  function addSavedProfile(profile: LocalProfile) {
+    if (localPlayers.some((p) => p.existingPlayerId === profile.playerId)) return;
+    setLocalPlayers((prev) => [
+      ...prev,
+      {
+        key: profile.playerId,
+        displayName: profile.displayName,
+        existingPlayerId: profile.playerId,
+        avatarEmoji: profile.avatarEmoji,
+        avatarColor: profile.avatarColor,
+      },
+    ]);
+  }
 
   function toggleCategory(id: string) {
     setSelectedCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
@@ -62,6 +87,7 @@ export function SetupClient() {
     setLoading(true);
     try {
       const teamModeSplit = mode === 'TEAM_BATTLE';
+      const validLocalPlayers = localPlayers.filter((p) => p.displayName.trim());
       const res = await fetch('/api/game/solo/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,9 +99,11 @@ export function SetupClient() {
           localPlayers: isLocal
             ? [
                 { displayName: player?.displayName ?? 'أنا', teamKey: teamModeSplit ? 'A' : undefined },
-                ...localPlayers
-                  .filter((n) => n.trim())
-                  .map((name, i) => ({ displayName: name.trim(), teamKey: teamModeSplit ? (i % 2 === 0 ? 'B' : 'A') : undefined })),
+                ...validLocalPlayers.map((p, i) => ({
+                  displayName: p.displayName.trim(),
+                  existingPlayerId: p.existingPlayerId,
+                  teamKey: teamModeSplit ? (i % 2 === 0 ? 'B' : 'A') : undefined,
+                })),
               ]
             : undefined,
         }),
@@ -85,6 +113,14 @@ export function SetupClient() {
         setError(data.error ?? 'حدث خطأ');
         return;
       }
+
+      if (isLocal && Array.isArray(data.sessions)) {
+        // احفظ اللاعبين المحليين الجدد (الذين لم يُعادوا استخدامهم من قبل) على هذا الجهاز للمرة القادمة
+        for (const s of data.sessions.slice(1) as { playerId: string; displayName: string; avatarEmoji: string; avatarColor: string }[]) {
+          saveLocalProfile({ playerId: s.playerId, displayName: s.displayName, avatarEmoji: s.avatarEmoji, avatarColor: s.avatarColor });
+        }
+      }
+
       sessionStorage.setItem(`quiz_game_${data.gameId}`, JSON.stringify(data));
       router.push(`/play/game/${data.gameId}`);
     } finally {
@@ -189,22 +225,56 @@ export function SetupClient() {
           </button>
         </div>
         {isLocal && (
-          <div className="mt-4 flex flex-col gap-2">
-            <p className="text-xs text-white/50">أضف أسماء بقية اللاعبين على نفس الجهاز</p>
-            {localPlayers.map((name, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="text-lg">{AVATAR_EMOJIS[(i + 1) % AVATAR_EMOJIS.length]}</span>
+          <div className="mt-4 flex flex-col gap-3">
+            {savedProfiles.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs text-white/50">لاعبون محفوظون على هذا الجهاز — اضغط للإضافة</p>
+                <div className="flex flex-wrap gap-2">
+                  {savedProfiles.map((profile) => {
+                    const added = localPlayers.some((p) => p.existingPlayerId === profile.playerId);
+                    return (
+                      <button
+                        key={profile.playerId}
+                        onClick={() => addSavedProfile(profile)}
+                        disabled={added}
+                        className={cn(
+                          'flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-xs font-bold transition disabled:opacity-40',
+                          added ? 'border-arena-success bg-arena-success/15' : 'border-arena-border bg-arena-surface2 hover:border-arena-primary/50'
+                        )}
+                      >
+                        <span style={{ color: profile.avatarColor }}>{profile.avatarEmoji}</span>
+                        {profile.displayName}
+                        {added && <UserCheck size={12} className="text-arena-success" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-white/50">أو أضف اسم لاعب جديد</p>
+            {localPlayers.map((p, i) => (
+              <div key={p.key} className="flex items-center gap-2">
+                <span className="text-lg">{p.avatarEmoji ?? AVATAR_EMOJIS[(i + 1) % AVATAR_EMOJIS.length]}</span>
                 <Input
-                  value={name}
-                  onChange={(e) => setLocalPlayers((prev) => prev.map((p, idx) => (idx === i ? e.target.value : p)))}
+                  value={p.displayName}
+                  onChange={(e) => setLocalPlayers((prev) => prev.map((pl) => (pl.key === p.key ? { ...pl, displayName: e.target.value } : pl)))}
+                  disabled={!!p.existingPlayerId}
                   maxLength={30}
                 />
-                <button onClick={() => setLocalPlayers((prev) => prev.filter((_, idx) => idx !== i))} className="text-white/40 hover:text-arena-danger">
+                <button
+                  onClick={() => setLocalPlayers((prev) => prev.filter((pl) => pl.key !== p.key))}
+                  className="text-white/40 hover:text-arena-danger"
+                >
                   <Trash2 size={18} />
                 </button>
               </div>
             ))}
-            <Button variant="ghost" size="sm" onClick={() => setLocalPlayers((prev) => [...prev, `لاعب ${prev.length + 2}`])}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocalPlayers((prev) => [...prev, { key: `new-${Date.now()}`, displayName: `لاعب ${prev.length + 2}` }])}
+            >
               <Plus size={14} /> إضافة لاعب
             </Button>
           </div>

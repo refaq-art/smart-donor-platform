@@ -187,7 +187,9 @@ export function GamePlayer({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={round.question.imageUrl} alt="" className="mx-auto mb-4 max-h-56 rounded-2xl object-cover" />
           )}
-          <h2 className="text-xl font-extrabold leading-relaxed sm:text-2xl">{round.question.textAr}</h2>
+          <h2 data-testid="question-text" className="text-xl font-extrabold leading-relaxed sm:text-2xl">
+            {round.question.textAr}
+          </h2>
         </div>
 
         <div className="mt-6">

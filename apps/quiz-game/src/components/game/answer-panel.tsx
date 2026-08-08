@@ -93,6 +93,7 @@ function ChoiceAnswer({
         return (
           <motion.button
             key={option.id}
+            data-testid="answer-option"
             type="button"
             disabled={disabled}
             onClick={() => {
@@ -152,6 +153,7 @@ function TextAnswer({
   return (
     <div className="flex flex-col gap-3">
       <Input
+        data-testid="text-answer-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         disabled={disabled}
@@ -161,7 +163,7 @@ function TextAnswer({
           if (e.key === 'Enter' && value.trim() && !disabled) onSubmit({ textAnswer: value.trim() });
         }}
       />
-      <Button size="lg" disabled={disabled || !value.trim()} onClick={() => onSubmit({ textAnswer: value.trim() })}>
+      <Button data-testid="text-answer-submit" size="lg" disabled={disabled || !value.trim()} onClick={() => onSubmit({ textAnswer: value.trim() })}>
         إرسال الإجابة
       </Button>
       {revealed && correctText && (
@@ -232,7 +234,7 @@ function OrderingAnswer({
           );
         })}
       </ol>
-      <Button size="lg" disabled={disabled} onClick={() => onSubmit({ orderedAnswerIds: order })}>
+      <Button data-testid="ordering-submit" size="lg" disabled={disabled} onClick={() => onSubmit({ orderedAnswerIds: order })}>
         تأكيد الترتيب
       </Button>
     </div>

@@ -104,6 +104,7 @@ export function LeaderboardClient() {
               >
                 <Link
                   href={`/profile/${e.playerId}`}
+                  data-testid="leaderboard-row"
                   className={cn(
                     'flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-white/5',
                     e.rank <= 3 && 'bg-white/5'

@@ -35,7 +35,7 @@ export function QuickPlayButton() {
   }
 
   return (
-    <Button size="xl" variant="accent" onClick={start} disabled={loading} className="w-full sm:w-auto">
+    <Button data-testid="quick-play-button" size="xl" variant="accent" onClick={start} disabled={loading} className="w-full sm:w-auto">
       {loading ? <Spinner /> : <Zap size={20} />}
       لعبة سريعة
     </Button>

@@ -38,3 +38,7 @@ next-env.d.ts
 # uploads
 /public/uploads/*
 !/public/uploads/.gitkeep
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

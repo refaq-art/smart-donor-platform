@@ -72,7 +72,7 @@ export function RoundReveal({
         </div>
       ) : (
         onNext && (
-          <Button size="lg" onClick={onNext}>
+          <Button data-testid="round-next" size="lg" onClick={onNext}>
             {nextLabel}
           </Button>
         )

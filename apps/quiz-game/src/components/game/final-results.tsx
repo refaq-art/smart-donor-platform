@@ -18,7 +18,12 @@ export function FinalResults({ results, onPlayAgain }: { results: PlayerResultRo
 
   return (
     <div className="flex flex-col items-center gap-6 py-6">
-      <motion.h1 initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-3xl font-black text-gradient-primary">
+      <motion.h1
+        data-testid="final-results-heading"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="text-3xl font-black text-gradient-primary"
+      >
         🎉 انتهت المباراة!
       </motion.h1>
 

@@ -19,6 +19,8 @@ export const localPlayerSchema = z.object({
   avatarEmoji: z.string().optional(),
   avatarColor: z.string().optional(),
   teamKey: z.enum(['A', 'B']).optional(),
+  /** معرّف لاعب محلي محفوظ مسبقًا على هذا الجهاز — إن وُجد يُعاد استخدامه بدل إنشاء لاعب جديد */
+  existingPlayerId: z.string().optional(),
 });
 
 export const startSoloGameSchema = z.object({

@@ -82,7 +82,13 @@ export function LoginClient() {
           {(tab === 'guest' || tab === 'register') && (
             <div>
               <Label>اسم اللاعب</Label>
-              <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="مثال: أبو فهد" maxLength={30} />
+              <Input
+                data-testid="display-name-input"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="مثال: أبو فهد"
+                maxLength={30}
+              />
             </div>
           )}
 
@@ -135,7 +141,7 @@ export function LoginClient() {
 
           {error && <p className="rounded-lg bg-arena-danger/20 px-3 py-2 text-sm text-arena-danger">{error}</p>}
 
-          <Button size="lg" disabled={loading} onClick={submit}>
+          <Button data-testid="auth-submit" size="lg" disabled={loading} onClick={submit}>
             {loading ? 'جارٍ التحميل...' : tab === 'guest' ? 'العب الآن 🎮' : tab === 'login' ? 'دخول' : 'إنشاء الحساب'}
           </Button>
         </div>

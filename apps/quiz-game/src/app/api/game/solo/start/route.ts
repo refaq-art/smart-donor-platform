@@ -23,6 +23,17 @@ export async function POST(request: Request) {
       const extras = (body.localPlayers ?? []).slice(1);
       for (let i = 0; i < extras.length; i++) {
         const lp = extras[i];
+
+        // إعادة استخدام لاعب محلي محفوظ مسبقًا على هذا الجهاز — فقط إن كان "ضيفًا" فعلًا
+        // (لا يُسمح بإعادة استخدام معرّف حساب مسجَّل حقيقي لمنع تلاعب أي طرف بإحصائيات غيره).
+        if (lp.existingPlayerId) {
+          const existing = await prisma.player.findUnique({ where: { id: lp.existingPlayerId } });
+          if (existing && existing.isGuest) {
+            players.push({ playerId: existing.id, teamKey: lp.teamKey ?? null, localSlot: i + 1 });
+            continue;
+          }
+        }
+
         const guest = await prisma.player.create({
           data: {
             isGuest: true,
