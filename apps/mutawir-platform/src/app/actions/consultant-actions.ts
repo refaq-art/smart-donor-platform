@@ -33,7 +33,6 @@ export async function decideIndicatorAction(formData: FormData) {
 
   const finalScore = Number(finalScoreRaw);
   if (Number.isNaN(finalScore)) throw new Error("يرجى إدخال درجة صحيحة");
-  if (decision === "MODIFIED" && !changeReason) throw new Error("يرجى كتابة سبب التعديل");
 
   const finalLevel = levelLabelForScore(indicator, finalScore);
 
