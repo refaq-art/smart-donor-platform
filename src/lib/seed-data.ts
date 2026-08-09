@@ -12,6 +12,9 @@ export const DEMO_PASSWORD = "Passw0rd!";
 export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => void = console.log) {
   log("🌱 جارٍ حذف البيانات التجريبية السابقة (إن وجدت)...");
   await prisma.activityLog.deleteMany({});
+  await prisma.donorReportObligation.deleteMany({});
+  await prisma.donorSupportRecord.deleteMany({});
+  await prisma.donorCorrespondence.deleteMany({});
   await prisma.applicationStatusHistory.deleteMany({});
   await prisma.attachment.deleteMany({});
   await prisma.grantApplication.deleteMany({});
@@ -422,7 +425,7 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
     ],
   });
 
-  await createApplication({
+  const appSalal = await createApplication({
     title: "طلب دعم السلال الغذائية — شركة الواحة الغذائية",
     projectId: project2.id,
     opportunityId: opp2.id,
@@ -546,6 +549,66 @@ export async function seedDemoData(prisma: PrismaClient, log: (msg: string) => v
       }),
       createdById: officer.id,
     },
+  });
+
+  log("📋 إنشاء التزامات تقارير ما بعد القبول والمراسلات وسجل الدعم التاريخي...");
+  await prisma.donorReportObligation.createMany({
+    data: [
+      {
+        organizationId: org.id,
+        applicationId: appSalal.id,
+        title: "تقرير مرحلي أول — توزيع الدفعة الأولى",
+        type: "تقرير مرحلي",
+        dueDate: inDays(-5),
+        status: "PENDING",
+        notes: "وفق شرط شركة الواحة الغذائية بتقرير مرحلي كل شهر.",
+        createdById: officer.id,
+        isDemo: true,
+      },
+      {
+        organizationId: org.id,
+        applicationId: appSalal.id,
+        title: "تقرير مالي مرفق بالفواتير",
+        type: "تقرير مالي",
+        dueDate: inDays(10),
+        status: "PENDING",
+        createdById: officer.id,
+        isDemo: true,
+      },
+      {
+        organizationId: org.id,
+        applicationId: appSalal.id,
+        title: "تقرير نهائي وتقييم الأثر",
+        type: "تقرير نهائي",
+        dueDate: inDays(-30),
+        status: "SUBMITTED",
+        submittedAt: inDays(-28),
+        createdById: officer.id,
+        isDemo: true,
+      },
+    ],
+  });
+
+  await prisma.donorCorrespondence.create({
+    data: {
+      organizationId: org.id,
+      donorId: donor2.id,
+      applicationId: appSalal.id,
+      type: "THANK_YOU",
+      subject: `خطاب شكر وتقدير — ${appSalal.title}`,
+      body: `السادة/ أ. عبدالله الحربي — مسؤول المسؤولية الاجتماعية المحترم\n\nالتحية الطيبة وبعد،\n\nيسر جمعية رفاق الخيرية أن تتقدم لكم بجزيل الشكر والتقدير على دعمكم الكريم لمشروع "السلال الغذائية للأسر المحتاجة" بمبلغ إجمالي قدره 60,000 ر.س.\n\nإن دعمكم يمثل إسهامًا حقيقيًا في تحقيق الأثر المرجو للمستفيدين.\n\nوتفضلوا بقبول فائق الاحترام والتقدير،\n\nخالد المطيري — المدير التنفيذي\nجمعية رفاق الخيرية`,
+      createdById: manager.id,
+      isDemo: true,
+    },
+  });
+
+  await prisma.donorSupportRecord.createMany({
+    data: [
+      { organizationId: org.id, donorId: donor1.id, year: 2024, amount: 90000, notes: "دعم أول تعاون تعليمي.", createdById: officer.id, isDemo: true },
+      { organizationId: org.id, donorId: donor1.id, year: 2025, amount: 130000, projectId: project1.id, notes: "توسّع الدعم بعد نجاح المرحلة الأولى.", createdById: officer.id, isDemo: true },
+      { organizationId: org.id, donorId: donor2.id, year: 2025, amount: 60000, projectId: project2.id, applicationId: appSalal.id, createdById: officer.id, isDemo: true },
+      { organizationId: org.id, donorId: donor4.id, year: 2024, amount: 45000, notes: "دعم أولي لم يتكرر.", createdById: manager.id, isDemo: true },
+    ],
   });
 
   log("👔 إنشاء مجلس الإدارة والفريق التنفيذي...");

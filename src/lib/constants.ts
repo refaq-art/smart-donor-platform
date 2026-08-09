@@ -67,6 +67,20 @@ export const ALLOWED_UPLOAD_TYPES: Record<string, string> = {
 
 export const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 10);
 
+export const REPORT_OBLIGATION_TYPES = [
+  "تقرير مرحلي",
+  "تقرير نهائي",
+  "تقرير مالي",
+  "تقرير أثر",
+  "أخرى",
+] as const;
+
+export const CORRESPONDENCE_TYPES = {
+  THANK_YOU: "خطاب شكر",
+  ACCEPTANCE_ACK: "تأكيد استلام الموافقة",
+  GENERAL: "خطاب عام",
+} as const;
+
 export const DOCUMENT_CATEGORIES = [
   "ترخيص الجمعية",
   "شهادة الزكاة والدخل",

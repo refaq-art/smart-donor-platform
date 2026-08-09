@@ -40,6 +40,9 @@ model User {
   comments             ApplicationComment[]
   applicationVersions  ApplicationVersion[]
   uploadedDocuments    OrgDocument[]
+  reportObligations    DonorReportObligation[]
+  supportRecords       DonorSupportRecord[]
+  correspondences      DonorCorrespondence[]
 
   @@index([organizationId])
 }
@@ -95,6 +98,9 @@ model Organization {
   boardMembers  BoardMember[]
   activityLogs  ActivityLog[]
   donorLeads    DonorLead[]
+  reportObligations DonorReportObligation[]
+  supportRecords    DonorSupportRecord[]
+  correspondences   DonorCorrespondence[]
 }
 
 // أعضاء مجلس الإدارة والفريق التنفيذي
@@ -171,6 +177,7 @@ model Project {
   applications  GrantApplication[]
   opportunities FundingOpportunity[]
   donorLeadMatches DonorLead[]
+  supportRecords   DonorSupportRecord[]
 }
 
 model Donor {
@@ -193,6 +200,8 @@ model Donor {
 
   opportunities FundingOpportunity[]
   attachments   Attachment[]
+  supportRecords  DonorSupportRecord[]
+  correspondences DonorCorrespondence[]
 }
 
 // مانح مُكتشف تلقائيًا عبر البحث اليومي بالذكاء الاصطناعي (src/lib/donor-discovery.ts).
@@ -297,6 +306,9 @@ model GrantApplication {
   attachments   Attachment[]
   comments      ApplicationComment[]
   versions      ApplicationVersion[]
+  reportObligations DonorReportObligation[]
+  supportRecords    DonorSupportRecord[]
+  correspondences   DonorCorrespondence[]
 }
 
 model ApplicationStatusHistory {
@@ -409,4 +421,81 @@ model ApplicationVersion {
   createdAt     DateTime         @default(now())
 
   @@index([applicationId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// متابعة ما بعد القبول: التزامات إعداد التقارير + سجل الدعم التاريخي + المراسلات
+// ─────────────────────────────────────────────────────────────────────────────
+
+// التزام بتقديم تقرير للجهة المانحة بعد قبول طلب المنحة (تقرير مرحلي/نهائي/مالي/أثر).
+// "متأخر" ليست حالة مخزَّنة — تُحسب في الواجهة بمقارنة dueDate بتاريخ اليوم طالما الحالة PENDING.
+model DonorReportObligation {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  applicationId  String
+  application    GrantApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title          String
+  // تقرير مرحلي / تقرير نهائي / تقرير مالي / تقرير أثر / أخرى
+  type           String           @default("تقرير مرحلي")
+  dueDate        DateTime
+  // PENDING = مستحق | SUBMITTED = تم التقديم
+  status         String           @default("PENDING")
+  submittedAt    DateTime?
+  notes          String?
+  createdById    String?
+  createdBy      User?            @relation(fields: [createdById], references: [id])
+  isDemo         Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+
+  @@index([organizationId])
+  @@index([applicationId])
+  @@index([dueDate])
+}
+
+// سجل تاريخي لدعم فعلي قدّمته جهة مانحة (بخلاف الفرص/الطلبات قيد التقديم) — يبني صورة
+// كاملة عن علاقة الجمعية بالمانح عبر السنوات، لأغراض التقارير والتعريف بالمانح.
+model DonorSupportRecord {
+  id             String            @id @default(cuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  donorId        String
+  donor          Donor             @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  year           Int
+  amount         Float
+  projectId      String?
+  project        Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  applicationId  String?
+  application    GrantApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  notes          String?
+  createdById    String?
+  createdBy      User?             @relation(fields: [createdById], references: [id])
+  isDemo         Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+
+  @@index([organizationId])
+  @@index([donorId])
+}
+
+// خطاب رسمي مُولَّد للتواصل مع المانح (شكر بعد القبول، تأكيد استلام الموافقة، عام) —
+// يُحفظ نصه كاملًا وقت الإنشاء كي يبقى ثابتًا حتى لو تغيّر ملف الجمعية لاحقًا.
+model DonorCorrespondence {
+  id             String            @id @default(cuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  donorId        String
+  donor          Donor             @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  applicationId  String?
+  application    GrantApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  // THANK_YOU = خطاب شكر | ACCEPTANCE_ACK = تأكيد استلام الموافقة | GENERAL = عام
+  type           String
+  subject        String
+  body           String
+  createdById    String?
+  createdBy      User?             @relation(fields: [createdById], references: [id])
+  isDemo         Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+
+  @@index([organizationId])
+  @@index([donorId])
 }

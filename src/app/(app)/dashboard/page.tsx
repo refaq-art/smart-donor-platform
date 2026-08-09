@@ -6,7 +6,7 @@ import { STATUS_COLORS, OPPORTUNITY_STATUS_COLORS } from "@/lib/constants";
 import { computeCompletion } from "@/lib/completion";
 import { documentValidity } from "@/lib/document-validity";
 import { formatDate, formatMoney, daysUntil } from "@/lib/utils";
-import { FolderKanban, Target, FileText, CheckCircle2, XCircle, Clock, AlertTriangle, Plus, FolderOpen, MessageSquare, Timer, Wallet } from "lucide-react";
+import { FolderKanban, Target, FileText, CheckCircle2, XCircle, Clock, AlertTriangle, Plus, FolderOpen, MessageSquare, Timer, Wallet, ClipboardCheck } from "lucide-react";
 
 const ACTIVE_APP_STATUSES = ["مسودة", "تحت المراجعة الداخلية", "جاهز للإرسال", "مطلوب استكمال"];
 const STALLED_AFTER_DAYS = 14;
@@ -38,6 +38,7 @@ export default async function DashboardPage() {
     openChangeRequests,
     sentAndBeyondApps,
     prepTimeApps,
+    upcomingReportObligations,
   ] = await Promise.all([
     prisma.project.count({ where: orgWhere }),
     prisma.fundingOpportunity.count({ where: { ...orgWhere, status: "مفتوحة" } }),
@@ -92,6 +93,12 @@ export default async function DashboardPage() {
       where: { ...orgWhere, statusHistory: { some: { toStatus: "تم الإرسال" } } },
       select: { createdAt: true, statusHistory: { where: { toStatus: "تم الإرسال" }, orderBy: { createdAt: "asc" }, take: 1, select: { createdAt: true } } },
     }),
+    prisma.donorReportObligation.findMany({
+      where: { ...orgWhere, status: "PENDING", dueDate: { lte: soon } },
+      include: { application: { select: { id: true, title: true } } },
+      orderBy: { dueDate: "asc" },
+      take: 8,
+    }),
   ]);
 
   const totalDecided = acceptedApps + rejectedApps;
@@ -130,6 +137,13 @@ export default async function DashboardPage() {
           tone="gold"
         />
         <StatCard label="مواعيد قريبة (14 يومًا)" value={upcomingDeadlines.length} icon={AlertTriangle} tone="red" />
+        <StatCard
+          label="تقارير مستحقة للمانحين"
+          value={upcomingReportObligations.length}
+          hint="خلال 14 يومًا أو متأخرة"
+          icon={ClipboardCheck}
+          tone="red"
+        />
         <StatCard
           label="متوسط زمن التحضير"
           value={avgPrepDays !== null ? `${avgPrepDays} يومًا` : "—"}
@@ -213,6 +227,34 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <div className="card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-black text-ink">تقارير مستحقة للمانحين</p>
+          </div>
+          {upcomingReportObligations.length === 0 ? (
+            <EmptyState icon={ClipboardCheck} title="لا توجد تقارير مستحقة قريبًا" />
+          ) : (
+            <ul className="space-y-2">
+              {upcomingReportObligations.map((o) => {
+                const overdue = o.dueDate.getTime() < now.getTime();
+                return (
+                  <li key={o.id}>
+                    <Link href={`/applications/${o.applicationId}`} className="block rounded-lg border border-slate-200 px-3 py-2.5 text-sm hover:bg-brand-50">
+                      <p className="font-bold text-ink">{o.title}</p>
+                      <div className="mt-1 flex items-center justify-between text-xs">
+                        <span className="text-slate-400">{o.application.title}</span>
+                        <span className={overdue ? "font-bold text-red-600" : "font-bold text-amber-600"}>
+                          {overdue ? "متأخر" : `الاستحقاق ${formatDate(o.dueDate)}`}
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
         <div className="card p-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-black text-ink">مستندات تنتهي صلاحيتها</p>

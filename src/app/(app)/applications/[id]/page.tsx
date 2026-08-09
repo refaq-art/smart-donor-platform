@@ -9,11 +9,15 @@ import StatusPanel from "@/components/status-panel";
 import AttachmentsPanel from "@/components/attachments-panel";
 import ApplicationCommentsPanel from "@/components/application-comments-panel";
 import ApplicationVersionsPanel from "@/components/application-versions-panel";
+import ReportObligationsPanel from "@/components/report-obligations-panel";
+import CorrespondencePanel from "@/components/correspondence-panel";
 import ConfirmSubmitButton from "@/components/confirm-submit-button";
 import { updateApplicationContentAction, changeApplicationStatusAction, deleteApplicationAction } from "@/app/actions/applications";
 import { uploadAttachmentAction } from "@/app/actions/attachments";
 import { addCommentAction, resolveCommentAction, deleteCommentAction } from "@/app/actions/application-comments";
 import { restoreVersionAction } from "@/app/actions/application-versions";
+import { addReportObligationAction, setReportObligationSubmittedAction, deleteReportObligationAction } from "@/app/actions/report-obligations";
+import { generateCorrespondenceAction, deleteCorrespondenceAction } from "@/app/actions/correspondence";
 import { FIELD_KEYS, type Fields } from "@/lib/application-fields";
 import { formatDate } from "@/lib/utils";
 import { Trash2, History, Printer, FileDown, FileSpreadsheet } from "lucide-react";
@@ -26,11 +30,13 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     where: { id, organizationId: session.organizationId },
     include: {
       project: true,
-      opportunity: true,
+      opportunity: { include: { donor: true } },
       attachments: { orderBy: { uploadedAt: "desc" } },
       statusHistory: { orderBy: { createdAt: "desc" }, include: { changedBy: true } },
       comments: { orderBy: { createdAt: "desc" }, include: { author: { select: { id: true, name: true } } } },
       versions: { orderBy: { createdAt: "desc" }, include: { createdBy: { select: { name: true } } } },
+      reportObligations: { orderBy: { dueDate: "asc" } },
+      correspondences: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!application) notFound();
@@ -178,6 +184,31 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           }}
           canRestore={!readOnly}
           restoreAction={restoreVersionAction}
+        />
+      </div>
+
+      {(application.status === "مقبول" || application.reportObligations.length > 0) && (
+        <div className="mt-6">
+          <ReportObligationsPanel
+            applicationId={id}
+            obligations={application.reportObligations}
+            canEdit={!readOnly}
+            addAction={addReportObligationAction}
+            setSubmittedAction={setReportObligationSubmittedAction}
+            deleteAction={deleteReportObligationAction}
+          />
+        </div>
+      )}
+
+      <div className="mt-6">
+        <CorrespondencePanel
+          applicationId={id}
+          donorId={application.opportunity?.donorId || null}
+          donorName={application.opportunity?.donor?.name || null}
+          letters={application.correspondences}
+          canEdit={!readOnly}
+          generateAction={generateCorrespondenceAction}
+          deleteAction={deleteCorrespondenceAction}
         />
       </div>
     </div>

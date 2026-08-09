@@ -6,10 +6,15 @@ import { canEdit, canDelete } from "@/lib/roles";
 import { PageHeader, Badge, EmptyState } from "@/components/ui-bits";
 import { OPPORTUNITY_STATUS_COLORS } from "@/lib/constants";
 import AttachmentsPanel from "@/components/attachments-panel";
+import DonorSupportPanel from "@/components/donor-support-panel";
 import ConfirmSubmitButton from "@/components/confirm-submit-button";
 import { uploadAttachmentAction } from "@/app/actions/attachments";
 import { deleteDonorAction } from "@/app/actions/donors";
-import { Pencil, Trash2, Target, Phone, Mail, MapPin, Plus } from "lucide-react";
+import { addSupportRecordAction, deleteSupportRecordAction } from "@/app/actions/donor-support";
+import { formatDate } from "@/lib/utils";
+import { CORRESPONDENCE_TYPES } from "@/lib/constants";
+import type { CorrespondenceType } from "@/lib/correspondence-templates";
+import { Pencil, Trash2, Target, Phone, Mail, MapPin, Plus, Printer } from "lucide-react";
 
 const RELATIONSHIP_COLORS: Record<string, string> = {
   "نشط": "bg-emerald-50 text-emerald-700 border-emerald-300",
@@ -21,10 +26,18 @@ export default async function DonorDetailPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const session = await requireSession();
 
-  const donor = await prisma.donor.findFirst({
-    where: { id, organizationId: session.organizationId },
-    include: { attachments: { orderBy: { uploadedAt: "desc" } }, opportunities: { include: { project: true } } },
-  });
+  const [donor, projects] = await Promise.all([
+    prisma.donor.findFirst({
+      where: { id, organizationId: session.organizationId },
+      include: {
+        attachments: { orderBy: { uploadedAt: "desc" } },
+        opportunities: { include: { project: true } },
+        supportRecords: { include: { project: { select: { id: true, title: true } } } },
+        correspondences: { orderBy: { createdAt: "desc" } },
+      },
+    }),
+    prisma.project.findMany({ where: { organizationId: session.organizationId }, select: { id: true, title: true } }),
+  ]);
   if (!donor) notFound();
 
   const boundUpload = uploadAttachmentAction.bind(null, { donorId: id }, `/donors/${id}`);
@@ -83,6 +96,15 @@ export default async function DonorDetailPage({ params }: { params: Promise<{ id
               </ul>
             )}
           </div>
+
+          <DonorSupportPanel
+            donorId={id}
+            records={donor.supportRecords}
+            projects={projects}
+            canEdit={canEdit(session?.role)}
+            addAction={addSupportRecordAction}
+            deleteAction={deleteSupportRecordAction}
+          />
         </div>
 
         <div className="space-y-6">
@@ -99,6 +121,27 @@ export default async function DonorDetailPage({ params }: { params: Promise<{ id
             revalidateTarget={`/donors/${id}`}
             canEdit={canEdit(session?.role)}
           />
+          {donor.correspondences.length > 0 && (
+            <div className="card space-y-3 p-5">
+              <p className="text-sm font-black text-ink">الخطابات والمراسلات</p>
+              <ul className="space-y-2">
+                {donor.correspondences.map((l) => (
+                  <li key={l.id} className="rounded-lg border border-slate-200 px-3 py-2 text-xs">
+                    <span className="me-2 rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700">
+                      {CORRESPONDENCE_TYPES[l.type as CorrespondenceType] || l.type}
+                    </span>
+                    <span className="font-bold text-ink">{l.subject}</span>
+                    <div className="mt-1 flex items-center justify-between text-slate-400">
+                      <span>{formatDate(l.createdAt)}</span>
+                      <Link href={`/letters/${l.id}/print`} target="_blank" className="flex items-center gap-1 font-bold text-brand-600 hover:underline">
+                        <Printer size={12} /> عرض
+                      </Link>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
