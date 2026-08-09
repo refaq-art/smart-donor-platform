@@ -5,6 +5,7 @@ import { getFrameworkTree } from "@/lib/assessment-data";
 import { ASSESSMENT_STATUS_LABELS, type AssessmentStatusValue } from "@/lib/constants";
 import { decideIndicatorAction, requestMoreInfoAction, approveAssessmentAction } from "@/app/actions/consultant-actions";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { ConsultantDecisionForm } from "@/components/consultant-decision-form";
 
 export default async function ConsultantAssessmentReviewPage({ params }: { params: Promise<{ cycleId: string }> }) {
   const { cycleId } = await params;
@@ -125,28 +126,15 @@ export default async function ConsultantAssessmentReviewPage({ params }: { param
                   )}
 
                   {editable ? (
-                    <form action={decideIndicatorAction} className="grid grid-cols-1 gap-2 md:grid-cols-4">
-                      <input type="hidden" name="cycleId" value={cycleId} />
-                      <input type="hidden" name="indicatorId" value={indicator.id} />
-                      <select name="decision" defaultValue={ai?.insufficientInfo ? "MODIFIED" : "APPROVED_AI"} className="input">
-                        <option value="APPROVED_AI">اعتماد تقييم AI</option>
-                        <option value="MODIFIED">تعديل الدرجة</option>
-                      </select>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min={1}
-                        max={5}
-                        name="finalScore"
-                        defaultValue={decision?.finalScore ?? ai?.proposedScore ?? ""}
-                        placeholder="الدرجة النهائية"
-                        className="input"
-                        required
-                      />
-                      <input type="text" name="changeReason" placeholder="سبب التعديل (إن وجد)" className="input md:col-span-2" defaultValue={decision?.changeReason ?? ""} />
-                      <input type="text" name="gapNote" placeholder="ملاحظة/فجوة" className="input md:col-span-3" defaultValue={decision?.gapNote ?? ""} />
-                      <button type="submit" className="btn-secondary">حفظ القرار</button>
-                    </form>
+                    <ConsultantDecisionForm
+                      action={decideIndicatorAction}
+                      cycleId={cycleId}
+                      indicatorId={indicator.id}
+                      defaultDecision={(decision ? decision.decision === "MODIFIED" : ai?.insufficientInfo) ? "MODIFIED" : "APPROVED_AI"}
+                      defaultScore={decision?.finalScore ?? ai?.proposedScore ?? ""}
+                      defaultChangeReason={decision?.changeReason ?? ""}
+                      defaultGapNote={decision?.gapNote ?? ""}
+                    />
                   ) : decision ? (
                     <div className="text-xs text-slate-500">
                       القرار النهائي: {decision.finalScore.toFixed(2)} ({decision.finalLevel}) {decision.changeReason && `— ${decision.changeReason}`}
