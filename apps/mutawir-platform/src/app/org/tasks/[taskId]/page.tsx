@@ -5,6 +5,7 @@ import { TASK_STATUS_LABELS, DELAY_REASON_CODES, DELAY_REASON_LABELS, type TaskS
 import { uploadTaskEvidenceAction, updateTaskProgressAction, submitTaskForReviewAction, recordTaskDelayAction } from "@/app/actions/task-actions";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { TaskComments } from "@/components/task-comments";
+import { EvidenceUploadForm } from "@/components/evidence-upload-form";
 
 export default async function OrgTaskDetailPage({ params }: { params: Promise<{ taskId: string }> }) {
   const { taskId } = await params;
@@ -89,13 +90,7 @@ export default async function OrgTaskDetailPage({ params }: { params: Promise<{ 
           {task.evidence.length === 0 && <p className="text-sm text-slate-400">لم يتم رفع شواهد بعد.</p>}
         </div>
         {editable && (
-          <form action={uploadTaskEvidenceAction} className="flex flex-wrap items-center gap-2">
-            <input type="hidden" name="taskId" value={task.id} />
-            <input type="file" name="file" className="text-xs" />
-            <span className="text-xs text-slate-400">أو</span>
-            <input type="url" name="linkUrl" placeholder="رابط..." className="input w-40 text-xs" dir="ltr" />
-            <button type="submit" className="btn-secondary py-1 text-xs">رفع شاهد</button>
-          </form>
+          <EvidenceUploadForm action={uploadTaskEvidenceAction} hiddenFields={{ taskId: task.id }} />
         )}
       </div>
 

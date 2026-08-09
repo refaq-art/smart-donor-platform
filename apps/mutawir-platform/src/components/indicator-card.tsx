@@ -1,4 +1,5 @@
 import { saveAnswerAction, uploadEvidenceAction, deleteEvidenceAction } from "@/app/actions/assessment-actions";
+import { EvidenceUploadForm } from "@/components/evidence-upload-form";
 
 type Level = { levelNumber: number; label: string; description: string };
 type Evidence = { id: string; fileName: string; fileUrl: string | null; linkUrl: string | null };
@@ -79,16 +80,12 @@ export function IndicatorCard({
       </div>
 
       {editable && (
-        <form action={uploadEvidenceAction} className="mt-2 flex flex-wrap items-center gap-2">
-          <input type="hidden" name="cycleId" value={cycleId} />
-          <input type="hidden" name="indicatorId" value={indicator.id} />
-          <input type="file" name="file" className="text-xs" />
-          <span className="text-xs text-slate-400">أو</span>
-          <input type="url" name="linkUrl" placeholder="رابط..." className="input w-40 text-xs" dir="ltr" />
-          <button type="submit" className="btn-secondary py-1 text-xs">
-            رفع شاهد
-          </button>
-        </form>
+        <div className="mt-2">
+          <EvidenceUploadForm
+            action={uploadEvidenceAction}
+            hiddenFields={{ cycleId, indicatorId: indicator.id }}
+          />
+        </div>
       )}
     </div>
   );
