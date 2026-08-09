@@ -21,8 +21,8 @@ export default function LoginPage() {
             <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</div>
           )}
           <div>
-            <label className="label" htmlFor="email">البريد الإلكتروني</label>
-            <input className="input" id="email" name="email" type="email" required autoComplete="email" dir="ltr" />
+            <label className="label" htmlFor="identifier">البريد الإلكتروني أو اسم المستخدم</label>
+            <input className="input" id="identifier" name="identifier" type="text" required autoComplete="username" dir="ltr" />
           </div>
           <div>
             <label className="label" htmlFor="password">كلمة المرور</label>
@@ -35,7 +35,9 @@ export default function LoginPage() {
 
         <div className="mt-6 rounded-xl border border-navy-100 bg-navy-50 p-4 text-xs leading-relaxed text-navy-700">
           <div className="mb-1 font-semibold text-navy-800">حسابات تجريبية</div>
-          admin@mutawir.sa · consultant@mutawir.sa · council@mutawir.sa · org@mutawir.sa
+          admin · consultant · council · org
+          <br />
+          (أو بالبريد الإلكتروني: admin@mutawir.sa وهكذا)
           <br />
           كلمة المرور للجميع: Mutawir@2026
         </div>

@@ -93,21 +93,21 @@ async function seedDemoTenant() {
 
   const passwordHash = await bcrypt.hash("Mutawir@2026", 10);
 
-  async function upsertUser(email: string, name: string, role: RoleValue, organizationId?: string) {
+  async function upsertUser(email: string, name: string, role: RoleValue, organizationId?: string, username?: string) {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) return existing;
-    return prisma.user.create({ data: { email, name, role, passwordHash, organizationId } });
+    return prisma.user.create({ data: { email, name, role, passwordHash, organizationId, username } });
   }
 
-  const admin = await upsertUser("admin@mutawir.sa", "مدير النظام", "ADMIN");
-  const councilUser = await upsertUser("council@mutawir.sa", "عضو مجلس الجمعيات", "COUNCIL");
+  const admin = await upsertUser("admin@mutawir.sa", "مدير النظام", "ADMIN", undefined, "admin");
+  const councilUser = await upsertUser("council@mutawir.sa", "عضو مجلس الجمعيات", "COUNCIL", undefined, "council");
   await prisma.councilMember.upsert({
     where: { userId: councilUser.id },
     update: {},
     create: { userId: councilUser.id, title: "عضو مجلس إشرافي" },
   });
 
-  const consultantUser = await upsertUser("consultant@mutawir.sa", "المستشار سلمان العتيبي", "CONSULTANT");
+  const consultantUser = await upsertUser("consultant@mutawir.sa", "المستشار سلمان العتيبي", "CONSULTANT", undefined, "consultant");
   const consultant = await prisma.consultant.upsert({
     where: { userId: consultantUser.id },
     update: {},
@@ -140,7 +140,7 @@ async function seedDemoTenant() {
     },
   });
 
-  await upsertUser("org@mutawir.sa", "الجمعية النموذجية بحائل", "ORG", org.id);
+  await upsertUser("org@mutawir.sa", "الجمعية النموذجية بحائل", "ORG", org.id, "org");
 
   return { admin, consultantUser, councilUser, org };
 }

@@ -74,10 +74,10 @@ async function main() {
   const orgUserId = randomUUID();
 
   lines.push(`INSERT INTO "ProgramCycle" (id, name, "durationDays", "isActive", "createdAt") VALUES ('${cycleId}', 'دفعة تمكين 2026 - حائل', 100, true, ${now});`);
-  lines.push(`INSERT INTO "User" (id, email, "passwordHash", name, role, "isActive", "createdAt") VALUES ('${adminId}', 'admin@mutawir.sa', '${passwordHash}', 'مدير النظام', 'ADMIN', true, ${now});`);
-  lines.push(`INSERT INTO "User" (id, email, "passwordHash", name, role, "isActive", "createdAt") VALUES ('${councilUserId}', 'council@mutawir.sa', '${passwordHash}', 'عضو مجلس الجمعيات', 'COUNCIL', true, ${now});`);
+  lines.push(`INSERT INTO "User" (id, email, username, "passwordHash", name, role, "isActive", "createdAt") VALUES ('${adminId}', 'admin@mutawir.sa', 'admin', '${passwordHash}', 'مدير النظام', 'ADMIN', true, ${now});`);
+  lines.push(`INSERT INTO "User" (id, email, username, "passwordHash", name, role, "isActive", "createdAt") VALUES ('${councilUserId}', 'council@mutawir.sa', 'council', '${passwordHash}', 'عضو مجلس الجمعيات', 'COUNCIL', true, ${now});`);
   lines.push(`INSERT INTO "CouncilMember" (id, "userId", title, "createdAt") VALUES ('${randomUUID()}', '${councilUserId}', 'عضو مجلس إشرافي', ${now});`);
-  lines.push(`INSERT INTO "User" (id, email, "passwordHash", name, role, "isActive", "createdAt") VALUES ('${consultantUserId}', 'consultant@mutawir.sa', '${passwordHash}', 'المستشار سلمان العتيبي', 'CONSULTANT', true, ${now});`);
+  lines.push(`INSERT INTO "User" (id, email, username, "passwordHash", name, role, "isActive", "createdAt") VALUES ('${consultantUserId}', 'consultant@mutawir.sa', 'consultant', '${passwordHash}', 'المستشار سلمان العتيبي', 'CONSULTANT', true, ${now});`);
   lines.push(`INSERT INTO "Consultant" (id, "userId", bio, "createdAt") VALUES ('${consultantId}', '${consultantUserId}', 'مستشار تطوير مؤسسي', ${now});`);
 
   const contextAnswers = JSON.stringify({
@@ -89,7 +89,7 @@ async function main() {
   lines.push(
     `INSERT INTO "Organization" (id, name, "licenseNumber", region, "foundingYear", "executiveDirector", "contactEmail", "contactPhone", "fullTimeStaff", "partTimeStaff", "websiteUrl", "contextAnswers", "programCycleId", "consultantId", status, "createdAt", "updatedAt") VALUES ('${orgId}', 'الجمعية النموذجية بحائل', '1234', 'حائل', 2019, 'أ. محمد الحربي', 'info@demo-org.sa', '0500000000', 6, 4, 'https://demo-org.sa', '${esc(contextAnswers)}', '${cycleId}', '${consultantId}', 'ACTIVE', ${now}, ${now});`
   );
-  lines.push(`INSERT INTO "User" (id, email, "passwordHash", name, role, "organizationId", "isActive", "createdAt") VALUES ('${orgUserId}', 'org@mutawir.sa', '${passwordHash}', 'الجمعية النموذجية بحائل', 'ORG', '${orgId}', true, ${now});`);
+  lines.push(`INSERT INTO "User" (id, email, username, "passwordHash", name, role, "organizationId", "isActive", "createdAt") VALUES ('${orgUserId}', 'org@mutawir.sa', 'org', '${passwordHash}', 'الجمعية النموذجية بحائل', 'ORG', '${orgId}', true, ${now});`);
 
   console.log(lines.join("\n"));
 }

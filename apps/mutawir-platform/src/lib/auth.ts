@@ -4,17 +4,20 @@ import { prisma } from "@/lib/prisma";
 import { getSession, setSessionCookie, clearSessionCookie } from "@/lib/session";
 import type { RoleValue } from "@/lib/constants";
 
-export async function verifyCredentials(email: string, password: string) {
-  const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+export async function verifyCredentials(identifier: string, password: string) {
+  const trimmed = identifier.trim().toLowerCase();
+  const user = await prisma.user.findFirst({
+    where: { OR: [{ email: trimmed }, { username: trimmed }] },
+  });
   if (!user || !user.isActive) return null;
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return null;
   return user;
 }
 
-export async function loginUser(email: string, password: string) {
-  const user = await verifyCredentials(email, password);
-  if (!user) return { ok: false as const, error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" };
+export async function loginUser(identifier: string, password: string) {
+  const user = await verifyCredentials(identifier, password);
+  if (!user) return { ok: false as const, error: "البريد الإلكتروني/اسم المستخدم أو كلمة المرور غير صحيحة" };
   await setSessionCookie({
     userId: user.id,
     role: user.role as RoleValue,

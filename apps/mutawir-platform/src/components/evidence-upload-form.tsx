@@ -9,28 +9,31 @@ export function EvidenceUploadForm({
   action: (formData: FormData) => Promise<void>;
   hiddenFields: Record<string, string>;
 }) {
-  const [error, setError] = useState<string | null>(null);
+  const [hasFile, setHasFile] = useState(false);
+  const [linkValue, setLinkValue] = useState("");
+  const canSubmit = hasFile || linkValue.trim().length > 0;
 
   return (
     <form
       action={action}
       onSubmit={(e) => {
-        const form = e.currentTarget;
-        const file = (form.elements.namedItem("file") as HTMLInputElement | null)?.files?.[0];
-        const linkUrl = (form.elements.namedItem("linkUrl") as HTMLInputElement | null)?.value.trim();
-        if (!file && !linkUrl) {
+        if (!canSubmit) {
+          // Defensive guard in case the button is somehow triggered while
+          // still disabled (e.g. Enter key before state settles).
           e.preventDefault();
-          setError("يرجى إرفاق ملف أو إدخال رابط قبل الرفع");
-          return;
         }
-        setError(null);
       }}
       className="flex flex-wrap items-center gap-2"
     >
       {Object.entries(hiddenFields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
-      <input type="file" name="file" className="text-xs" onChange={() => setError(null)} />
+      <input
+        type="file"
+        name="file"
+        className="text-xs"
+        onChange={(e) => setHasFile(!!e.currentTarget.files?.length)}
+      />
       <span className="text-xs text-slate-400">أو</span>
       <input
         type="url"
@@ -38,12 +41,17 @@ export function EvidenceUploadForm({
         placeholder="رابط..."
         className="input w-40 text-xs"
         dir="ltr"
-        onChange={() => setError(null)}
+        value={linkValue}
+        onChange={(e) => setLinkValue(e.currentTarget.value)}
       />
-      <button type="submit" className="btn-secondary py-1 text-xs">
+      <button
+        type="submit"
+        disabled={!canSubmit}
+        className="btn-secondary py-1 text-xs disabled:cursor-not-allowed disabled:opacity-40"
+        title={canSubmit ? undefined : "اختر ملفًا أو اكتب رابطًا أولًا"}
+      >
         رفع شاهد
       </button>
-      {error && <p className="w-full text-xs text-red-500">{error}</p>}
     </form>
   );
 }

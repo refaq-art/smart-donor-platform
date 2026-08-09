@@ -4,11 +4,11 @@ import { redirect } from "next/navigation";
 import { loginUser, logoutUser, roleHome } from "@/lib/auth";
 
 export async function loginAction(_prevState: { error?: string } | undefined, formData: FormData) {
-  const email = String(formData.get("email") ?? "");
+  const identifier = String(formData.get("identifier") ?? "");
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "يرجى إدخال البريد الإلكتروني وكلمة المرور" };
+  if (!identifier || !password) return { error: "يرجى إدخال البريد الإلكتروني أو اسم المستخدم وكلمة المرور" };
 
-  const result = await loginUser(email, password);
+  const result = await loginUser(identifier, password);
   if (!result.ok) return { error: result.error };
   redirect(roleHome(result.role));
 }

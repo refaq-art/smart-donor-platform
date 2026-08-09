@@ -4,7 +4,7 @@ const BASE = process.env.BASE_URL ?? "http://localhost:3411";
 
 test("org can log in and see dashboard", async ({ page }) => {
   await page.goto(`${BASE}/login`);
-  await page.fill("#email", "org@mutawir.sa");
+  await page.fill("#identifier", "org@mutawir.sa");
   await page.fill("#password", "Mutawir@2026");
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/org$/);
@@ -13,7 +13,7 @@ test("org can log in and see dashboard", async ({ page }) => {
 
 test("org can fill an indicator answer and see it persisted", async ({ page }) => {
   await page.goto(`${BASE}/login`);
-  await page.fill("#email", "org@mutawir.sa");
+  await page.fill("#identifier", "org@mutawir.sa");
   await page.fill("#password", "Mutawir@2026");
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/org$/);
@@ -30,7 +30,7 @@ test("org can fill an indicator answer and see it persisted", async ({ page }) =
 
 test("consultant can log in and see portfolio", async ({ page }) => {
   await page.goto(`${BASE}/login`);
-  await page.fill("#email", "consultant@mutawir.sa");
+  await page.fill("#identifier", "consultant@mutawir.sa");
   await page.fill("#password", "Mutawir@2026");
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/consultant$/);
@@ -39,7 +39,7 @@ test("consultant can log in and see portfolio", async ({ page }) => {
 
 test("admin can log in and see framework", async ({ page }) => {
   await page.goto(`${BASE}/login`);
-  await page.fill("#email", "admin@mutawir.sa");
+  await page.fill("#identifier", "admin@mutawir.sa");
   await page.fill("#password", "Mutawir@2026");
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/admin$/);
@@ -49,7 +49,7 @@ test("admin can log in and see framework", async ({ page }) => {
 
 test("council can log in and see executive dashboard", async ({ page }) => {
   await page.goto(`${BASE}/login`);
-  await page.fill("#email", "council@mutawir.sa");
+  await page.fill("#identifier", "council@mutawir.sa");
   await page.fill("#password", "Mutawir@2026");
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/council$/);

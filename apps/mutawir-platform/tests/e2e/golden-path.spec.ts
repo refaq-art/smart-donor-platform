@@ -4,7 +4,7 @@ const BASE = process.env.BASE_URL ?? "http://localhost:3411";
 
 async function login(page: Page, email: string) {
   await page.goto(`${BASE}/login`);
-  await page.fill("#email", email);
+  await page.fill("#identifier", email);
   await page.fill("#password", "Mutawir@2026");
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/(org|consultant|council|admin)$/);
