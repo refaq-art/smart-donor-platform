@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission, requireOwnedOpportunity, requireSessionOrThrow, audit } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { evaluateEligibility, type EligibilityResult } from "@/lib/eligibility";
-import { documentIsValid } from "@/lib/document-validity";
 
 export async function addCriterionAction(opportunityId: string, formData: FormData) {
   await requirePermission("manageEligibility");
@@ -77,10 +76,6 @@ export async function evaluateOpportunityEligibility(
       })
     : null;
 
-  const validDocumentCategories = Array.from(
-    new Set(documents.filter((d) => documentIsValid(d.expiryDate)).map((d) => d.category))
-  );
-
   return evaluateEligibility(opportunity.criteria, {
     org: {
       foundedAt: org.foundedAt,
@@ -98,6 +93,7 @@ export async function evaluateOpportunityEligibility(
           timelineEnd: project.timelineEnd,
         }
       : null,
-    validDocumentCategories,
+    documents: documents.map((d) => ({ id: d.id, title: d.title, category: d.category, url: d.url, expiryDate: d.expiryDate })),
+    deadline: opportunity.deadline,
   });
 }

@@ -65,6 +65,14 @@ export type Criterion = {
   notes: string | null;
 };
 
+export type EligibilityDocument = {
+  id: string;
+  title: string;
+  category: string;
+  url: string;
+  expiryDate?: Date | string | null;
+};
+
 export type EvaluationContext = {
   org: {
     foundedAt?: Date | string | null;
@@ -80,8 +88,10 @@ export type EvaluationContext = {
     timelineStart?: Date | string | null;
     timelineEnd?: Date | string | null;
   } | null;
-  /** تصنيفات المستندات السارية المتوفرة لدى الجمعية */
-  validDocumentCategories: string[];
+  /** مستندات الجمعية (لتقييم شروط HAS_DOCUMENT، بما يشمل ربط النتيجة بالمستند الفعلي) */
+  documents: EligibilityDocument[];
+  /** الموعد النهائي لفرصة التمويل — يُستخدم للتحقق أن المستند سيبقى ساريًا حتى موعد التقديم لا اليوم فقط */
+  deadline?: Date | string | null;
 };
 
 export type CriterionResult = {
@@ -94,6 +104,10 @@ export type CriterionResult = {
   reason: string;
   /** ما الذي يحتاجه المستخدم لإصلاح الوضع أو استكمال البيانات */
   actionNeeded?: string;
+  /** للشروط من نوع HAS_DOCUMENT: المستند الفعلي الذي استند إليه الحكم، للوصول المباشر إليه */
+  documentId?: string;
+  documentTitle?: string;
+  documentUrl?: string;
 };
 
 export type EligibilityResult = {
@@ -306,14 +320,60 @@ function evaluateOne(c: Criterion, ctx: EvaluationContext): CriterionResult {
       const cat = c.documentCategory;
       if (!cat)
         return { ...base, status: "UNKNOWN", reason: "لم يُحدَّد تصنيف المستند المطلوب في هذا الشرط." };
-      const has = ctx.validDocumentCategories.includes(cat);
+
+      const now = Date.now();
+      const deadlineTime = ctx.deadline ? new Date(ctx.deadline).getTime() : null;
+      const matching = ctx.documents.filter((d) => d.category === cat);
+      const validNow = matching.filter((d) => !d.expiryDate || new Date(d.expiryDate).getTime() > now);
+
+      if (validNow.length === 0) {
+        return {
+          ...base,
+          status: "FAIL",
+          reason: `لا يوجد مستند ساري بتصنيف «${cat}» في مكتبة المستندات.`,
+          actionNeeded: `ارفع مستند «${cat}» ساري الصلاحية في ملف الجمعية.`,
+        };
+      }
+
+      // من بين المستندات السارية الآن، فضّل ما يبقى ساريًا حتى الموعد النهائي (أو بلا انتهاء أصلًا)
+      const survivesDeadline =
+        !deadlineTime || !Number.isFinite(deadlineTime)
+          ? validNow
+          : validNow.filter((d) => !d.expiryDate || new Date(d.expiryDate).getTime() >= deadlineTime);
+
+      if (survivesDeadline.length > 0) {
+        // الأبعد انتهاءً (أو بلا انتهاء) هو الأنسب للإشارة إليه
+        const best = survivesDeadline.reduce((a, b) => {
+          if (!a.expiryDate) return a;
+          if (!b.expiryDate) return b;
+          return new Date(a.expiryDate).getTime() >= new Date(b.expiryDate).getTime() ? a : b;
+        });
+        return {
+          ...base,
+          status: "PASS",
+          reason: `يوجد مستند ساري بتصنيف «${cat}» («${best.title}»)${
+            deadlineTime ? " ويبقى ساريًا حتى الموعد النهائي للفرصة." : "."
+          }`,
+          documentId: best.id,
+          documentTitle: best.title,
+          documentUrl: best.url,
+        };
+      }
+
+      // كل المستندات السارية اليوم ستنتهي قبل الموعد النهائي للفرصة — يُعتبر الشرط غير مستوفى
+      const soonestExpiring = validNow.reduce((a, b) =>
+        new Date(a.expiryDate!).getTime() <= new Date(b.expiryDate!).getTime() ? a : b
+      );
       return {
         ...base,
-        status: has ? "PASS" : "FAIL",
-        reason: has
-          ? `يوجد مستند ساري بتصنيف «${cat}» في مكتبة المستندات.`
-          : `لا يوجد مستند ساري بتصنيف «${cat}» في مكتبة المستندات.`,
-        actionNeeded: has ? undefined : `ارفع مستند «${cat}» ساري الصلاحية في ملف الجمعية.`,
+        status: "FAIL",
+        reason: `يوجد مستند بتصنيف «${cat}» («${soonestExpiring.title}») لكنه سينتهي بتاريخ ${new Date(
+          soonestExpiring.expiryDate!
+        ).toLocaleDateString("ar-SA-u-nu-latn")} — قبل الموعد النهائي للفرصة، فلن يبقى ساريًا وقت التقديم أو التنفيذ.`,
+        actionNeeded: `جدّد مستند «${cat}» بحيث يبقى ساري المفعول حتى ما بعد الموعد النهائي للفرصة.`,
+        documentId: soonestExpiring.id,
+        documentTitle: soonestExpiring.title,
+        documentUrl: soonestExpiring.url,
       };
     }
 

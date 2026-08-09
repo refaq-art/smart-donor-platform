@@ -187,6 +187,24 @@ export const mockProvider: AIProvider = {
         });
         break;
       }
+      case "explain_eligibility": {
+        const verdict = ctx(context, "verdict");
+        const summary = ctx(context, "summary");
+        const mandatoryIssues = context.mandatoryIssues?.split("\n").filter(Boolean) || [];
+        const otherIssues = context.otherIssues?.split("\n").filter(Boolean) || [];
+
+        if (!verdict || !summary) {
+          text = "لا تتوفر نتيجة فحص أهلية بعد لأشرحها. الرجاء إضافة شروط الأهلية وتشغيل الفحص أولًا.";
+        } else if (mandatoryIssues.length === 0 && otherIssues.length === 0) {
+          text = `الحكم الحالي: ${verdict}.\n${summary}\n\nلا توجد نقاط تحتاج معالجة حاليًا — جميع الشروط المسجّلة مستوفاة.`;
+        } else {
+          const steps: string[] = [];
+          mandatoryIssues.forEach((line, i) => steps.push(`${i + 1}. (إلزامي — الأهم) ${line}`));
+          otherIssues.forEach((line, i) => steps.push(`${mandatoryIssues.length + i + 1}. (غير إلزامي) ${line}`));
+          text = `الحكم الحالي: ${verdict}.\n${summary}\n\nخطة عملية مرتّبة بالأولوية للوصول إلى الأهلية الكاملة:\n${steps.join("\n")}\n\nابدأ بالبنود الإلزامية أولًا — فهي وحدها ما يحدد الأهلية النهائية؛ البنود غير الإلزامية تحسّن الفرصة لكنها لا تمنع التقديم.`;
+        }
+        break;
+      }
       default: {
         text = "لم أتمكن من تحديد نوع المساعدة المطلوبة.";
       }

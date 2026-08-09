@@ -10,6 +10,7 @@ import {
 } from "@/lib/eligibility";
 import { DOCUMENT_CATEGORIES } from "@/lib/constants";
 import ConfirmSubmitButton from "./confirm-submit-button";
+import AIAssist from "./ai-assist";
 import { cn } from "@/lib/utils";
 import {
   ShieldCheck,
@@ -20,6 +21,7 @@ import {
   HelpCircle,
   Loader2,
   RefreshCw,
+  Paperclip,
 } from "lucide-react";
 
 type Criterion = {
@@ -70,10 +72,31 @@ export default function EligibilityPanel({
         <p className="flex items-center gap-2 text-sm font-black text-brand-700">
           <ShieldCheck size={16} /> فحص الأهلية
         </p>
-        <button onClick={refresh} className="btn-secondary text-xs" disabled={pending}>
-          {pending ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
-          إعادة الفحص
-        </button>
+        <div className="flex items-center gap-2">
+          {result.results.length > 0 && (
+            <AIAssist
+              label="اشرح لي النتيجة"
+              action="explain_eligibility"
+              getContext={() => {
+                const fmt = (r: (typeof result.results)[number]) =>
+                  `- ${r.label}: ${r.reason}${r.actionNeeded ? ` ← ${r.actionNeeded}` : ""}`;
+                const mandatory = result.results.filter((r) => r.status !== "PASS" && r.isMandatory);
+                const optional = result.results.filter((r) => r.status !== "PASS" && !r.isMandatory);
+                return {
+                  verdict: VERDICT_LABELS[result.verdict],
+                  summary: result.summary,
+                  mandatoryIssues: mandatory.map(fmt).join("\n"),
+                  otherIssues: optional.map(fmt).join("\n"),
+                };
+              }}
+              onApply={() => {}}
+            />
+          )}
+          <button onClick={refresh} className="btn-secondary text-xs" disabled={pending}>
+            {pending ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+            إعادة الفحص
+          </button>
+        </div>
       </div>
 
       {/* الحكم العام مع سببه */}
@@ -115,6 +138,16 @@ export default function EligibilityPanel({
                     <p className="mt-0.5 text-xs leading-relaxed text-slate-600">{r.reason}</p>
                     {r.actionNeeded && (
                       <p className="mt-1 text-xs font-bold text-brand-600">← {r.actionNeeded}</p>
+                    )}
+                    {r.documentUrl && (
+                      <a
+                        href={r.documentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:underline"
+                      >
+                        <Paperclip size={12} /> عرض المستند: {r.documentTitle}
+                      </a>
                     )}
                   </div>
                   {editable && (

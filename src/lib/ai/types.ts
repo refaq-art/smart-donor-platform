@@ -14,6 +14,7 @@ export type AIActionType =
   | "readiness_assessment"
   | "clarifying_questions"
   | "extract_donor_lead"
+  | "explain_eligibility"
   | "custom";
 
 export type AIRequest = {
