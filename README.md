@@ -4,6 +4,10 @@
 
 > **ملاحظة حول الإصدار السابق**: كان هذا المستودع يحتوي على نموذج أولي بسيط (صفحة HTML واحدة تعمل بالكامل داخل المتصفح وتحفظ البيانات في LocalStorage). تمت إعادة بناء المنصة بالكامل لتصبح تطبيق ويب حقيقي بقاعدة بيانات وخادم ونظام صلاحيات، مع الإبقاء على نفس الفكرة والهوية العامة (جمعية رفاق الخيرية كبيانات تجريبية).
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Frefaq-art%2Fsmart-donor-platform&env=TURSO_DATABASE_URL,TURSO_AUTH_TOKEN,AUTH_SECRET,BOOTSTRAP_SECRET&envDescription=راجع+القسم+11+(النشر+السحابي+المجاني)+في+README+لمعرفة+كيفية+الحصول+على+كل+قيمة&envLink=https%3A%2F%2Fgithub.com%2Frefaq-art%2Fsmart-donor-platform%23readme&project-name=smart-donor-platform&repository-name=smart-donor-platform)
+
+أنشئ قاعدة بيانات Turso أولًا (خطوة 1 في القسم 11 أدناه)، ثم اضغط الزر أعلاه — يستورد Vercel المستودع تلقائيًا ويطلب منك قيم متغيرات البيئة الأربعة مباشرة أثناء الاستيراد (يمكنك توليد `AUTH_SECRET` و`BOOTSTRAP_SECRET` عشوائيًا من نفس الشاشة). أضف مخزن Vercel Blob من تبويب Storage بعد اكتمال النشر، ثم استدعِ نقطة `/api/admin/bootstrap` كما في الخطوة 6.
+
 ---
 
 ## 1. التقنيات المستخدمة ولماذا
@@ -292,11 +296,13 @@ npx playwright install chromium
 
 > **لماذا لا تكفي استضافة Vercel وحدها؟** خوادم Vercel بلا حالة (Serverless) — أي ملف SQLite محلي أو مرفق مرفوع يُفقد عند كل نشر جديد أو حتى بين الطلبات. لذلك تحتاج قاعدة بيانات وتخزين ملفات "مُدارين" خارجيًا، وكلاهما مجاني هنا.
 
+> **الطريقة الأسرع**: زر "Deploy with Vercel" أعلى هذا الملف يقوم بالخطوتين 2 و4 تلقائيًا (استيراد المشروع + نموذج لإدخال متغيرات البيئة الأربعة أثناء الاستيراد نفسه). ما زلت بحاجة لتنفيذ الخطوة 1 (إنشاء قاعدة Turso) يدويًا قبل الضغط عليه، والخطوتين 3 و6 بعده.
+
 ### خطوات النشر
 
 1. **إنشاء قاعدة بيانات Turso**: أنشئ حسابًا مجانيًا على [turso.tech](https://turso.tech) (تسجيل عبر GitHub متاح)، ثم أنشئ قاعدة بيانات جديدة. انسخ قيمتي **Database URL** (تبدأ بـ `libsql://`) و **Auth Token**.
 
-2. **استيراد المشروع في Vercel**: من [vercel.com](https://vercel.com) اختر "Add New Project" واربط مستودع GitHub هذا. يكتشف Vercel أنه مشروع Next.js تلقائيًا.
+2. **استيراد المشروع في Vercel**: من [vercel.com](https://vercel.com) اختر "Add New Project" واربط مستودع GitHub هذا (أو استخدم زر "Deploy with Vercel" أعلى الملف). يكتشف Vercel أنه مشروع Next.js تلقائيًا.
 
 3. **إنشاء مخزن Vercel Blob**: من تبويب Storage داخل مشروع Vercel، أنشئ "Blob Store" واربطه بالمشروع — سيضيف Vercel متغير `BLOB_READ_WRITE_TOKEN` تلقائيًا.
 
