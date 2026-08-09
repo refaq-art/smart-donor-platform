@@ -1,0 +1,422 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NOTE: SQLite has no native enum support in Prisma, so all "enum-like"
+// fields below are typed String and constrained by the TS union types in
+// src/lib/constants.ts (single source of truth, validated at the app
+// boundary with zod). Switching the datasource to Postgres later can
+// re-introduce real Prisma enums without changing the app-layer types.
+
+// ============================= Core tenancy =============================
+
+model ProgramCycle {
+  id            String         @id @default(cuid())
+  name          String
+  durationDays  Int            @default(100)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  organizations Organization[]
+}
+
+model Consultant {
+  id            String         @id @default(cuid())
+  userId        String         @unique
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio           String?
+  organizations Organization[]
+  createdAt     DateTime       @default(now())
+}
+
+model Organization {
+  id             String   @id @default(cuid())
+  name           String
+  licenseNumber  String?
+  region         String?
+  foundingYear   Int?
+  executiveDirector String?
+  contactEmail   String?
+  contactPhone   String?
+  fullTimeStaff  Int?
+  partTimeStaff  Int?
+  websiteUrl     String?
+  xUrl           String?
+  report2025Url  String?
+
+  // Free-text context/goals answers (admin-configurable question set; see OrgProfileField)
+  contextAnswers String   @default("{}") // JSON string: OrgContextAnswers
+
+  programCycleId String?
+  programCycle   ProgramCycle? @relation(fields: [programCycleId], references: [id])
+  consultantId   String?
+  consultant     Consultant?   @relation(fields: [consultantId], references: [id])
+
+  programStartDate DateTime? // set when PRE assessment is approved; day counter starts here
+  status           String    @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED
+
+  users            User[]
+  assessmentCycles AssessmentCycle[]
+  developmentGaps  DevelopmentGap[]
+  developmentPlans DevelopmentPlan[]
+  activityLogs     ActivityLog[]
+  aiRecommendations AIRecommendation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CouncilMember {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  username       String?  @unique
+  passwordHash   String
+  name           String
+  role           String // Role: ORG | CONSULTANT | COUNCIL | ADMIN
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  consultant     Consultant?
+  councilMember  CouncilMember?
+
+  notifications      Notification[]
+  activityLogs        ActivityLog[]
+  uploadedEvidence     AssessmentEvidence[]
+  taskEvidence         TaskEvidence[]
+  taskComments         TaskComment[]
+  taskReviews          TaskReview[]
+  consultantAssessments ConsultantAssessment[]
+}
+
+// ============================= Assessment framework (admin-editable) =============================
+
+model AssessmentDomain {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  criteria    AssessmentCriterion[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AssessmentCriterion {
+  id         String   @id @default(cuid())
+  domainId   String
+  domain     AssessmentDomain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  code       String   @unique
+  name       String
+  order      Int      @default(0)
+  isActive   Boolean  @default(true)
+  indicators AssessmentIndicator[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model AssessmentIndicator {
+  id                  String        @id @default(cuid())
+  criterionId         String
+  criterion           AssessmentCriterion @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+  code                String        @unique
+  name                String
+  type                String        // IndicatorType: MATURITY_LEVEL | COMPLETION_STAGE
+  weight              Float         @default(1)
+  order               Int           @default(0)
+  requiredEvidenceHint String?
+  isActive            Boolean       @default(true)
+
+  levels           IndicatorLevel[]
+  requiredEvidence RequiredEvidence[]
+  responses        AssessmentResponse[]
+  evidence         AssessmentEvidence[]
+  aiAssessments    AIAssessment[]
+  consultantAssessments ConsultantAssessment[]
+  developmentGaps  DevelopmentGap[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model IndicatorLevel {
+  id          String @id @default(cuid())
+  indicatorId String
+  indicator   AssessmentIndicator @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+  levelNumber Int // 1..3 for maturity tiers, 1..5 for completion stages
+  label       String // e.g. "مستوى التأسيس" or "لم يبدأ"
+  minScore    Float
+  maxScore    Float
+  description String
+
+  @@unique([indicatorId, levelNumber])
+}
+
+model RequiredEvidence {
+  id          String  @id @default(cuid())
+  indicatorId String
+  indicator   AssessmentIndicator @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  isMandatory Boolean @default(true)
+}
+
+// ============================= Assessment cycles (PRE / POST) =============================
+
+model AssessmentCycle {
+  id             String            @id @default(cuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  phase          String            // AssessmentPhase: PRE | POST
+  status         String            @default("DRAFT") // AssessmentStatus
+
+  submittedAt          DateTime?
+  aiAnalysisCompletedAt DateTime?
+  consultantApprovedAt DateTime?
+  consultantApprovedById String?
+
+  overallScore   Float? // computed on approval
+
+  responses     AssessmentResponse[]
+  evidence      AssessmentEvidence[]
+  aiAssessments AIAssessment[]
+  consultantAssessments ConsultantAssessment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, phase])
+}
+
+model AssessmentResponse {
+  id                String   @id @default(cuid())
+  assessmentCycleId String
+  assessmentCycle   AssessmentCycle @relation(fields: [assessmentCycleId], references: [id], onDelete: Cascade)
+  indicatorId       String
+  indicator         AssessmentIndicator @relation(fields: [indicatorId], references: [id])
+  answerText        String   @default("")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([assessmentCycleId, indicatorId])
+}
+
+model AssessmentEvidence {
+  id                 String   @id @default(cuid())
+  assessmentCycleId  String
+  assessmentCycle    AssessmentCycle @relation(fields: [assessmentCycleId], references: [id], onDelete: Cascade)
+  indicatorId        String
+  indicator          AssessmentIndicator @relation(fields: [indicatorId], references: [id])
+  requiredEvidenceId String?
+  fileName           String
+  fileUrl            String?
+  linkUrl            String?
+  fileType           String?
+  uploadedById        String
+  uploadedBy          User @relation(fields: [uploadedById], references: [id])
+  createdAt          DateTime @default(now())
+}
+
+model AIAssessment {
+  id                 String   @id @default(cuid())
+  assessmentCycleId  String
+  assessmentCycle    AssessmentCycle @relation(fields: [assessmentCycleId], references: [id], onDelete: Cascade)
+  indicatorId        String
+  indicator          AssessmentIndicator @relation(fields: [indicatorId], references: [id])
+
+  proposedScore    Float?
+  proposedLevel    String?
+  confidence       Float // 0-1
+  rationale        String
+  evidenceUsed     String  @default("[]") // JSON string array
+  missingEvidence  String  @default("[]") // JSON string array
+  insufficientInfo Boolean @default(false)
+  strengths        String?
+  weaknesses       String?
+  gap              String?
+  suggestedNeed    String?
+
+  createdAt DateTime @default(now())
+
+  consultantAssessments ConsultantAssessment[]
+}
+
+model ConsultantAssessment {
+  id                 String   @id @default(cuid())
+  assessmentCycleId  String
+  assessmentCycle    AssessmentCycle @relation(fields: [assessmentCycleId], references: [id], onDelete: Cascade)
+  indicatorId        String
+  indicator          AssessmentIndicator @relation(fields: [indicatorId], references: [id])
+  aiAssessmentId     String?
+  aiAssessment       AIAssessment? @relation(fields: [aiAssessmentId], references: [id])
+
+  finalScore   Float
+  finalLevel   String
+  gapNote      String?
+  decision     String // ConsultantDecision: APPROVED_AI | MODIFIED | NEEDS_MORE_INFO
+  changeReason String?
+
+  consultantId String
+  consultant   User @relation(fields: [consultantId], references: [id])
+  decidedAt    DateTime @default(now())
+
+  @@unique([assessmentCycleId, indicatorId])
+}
+
+// ============================= Gaps / plan / tasks =============================
+
+model DevelopmentGap {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  indicatorId     String
+  indicator       AssessmentIndicator @relation(fields: [indicatorId], references: [id])
+
+  approvedScore   Float
+  currentLevel    String
+  targetLevel     String  @default("مستوى التميز")
+  gapDescription  String
+  developmentNeed String
+  priority        String @default("MEDIUM") // TaskPriority
+  notes           String?
+
+  tasks Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, indicatorId])
+}
+
+model DevelopmentPlan {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  startDate      DateTime
+  endDate        DateTime
+  status         String   @default("ACTIVE")
+  tasks          Task[]
+  createdAt      DateTime @default(now())
+}
+
+model Task {
+  id                String   @id @default(cuid())
+  developmentPlanId String
+  developmentPlan   DevelopmentPlan @relation(fields: [developmentPlanId], references: [id], onDelete: Cascade)
+  developmentGapId  String?
+  developmentGap    DevelopmentGap? @relation(fields: [developmentGapId], references: [id])
+
+  title            String
+  description      String?
+  assigneeLabel    String?
+  priority         String @default("MEDIUM") // TaskPriority
+  startDate        DateTime
+  dueDate          DateTime
+  progressPercent  Int      @default(0)
+  status           String @default("NOT_STARTED") // TaskStatus
+  requiredEvidenceText String?
+  orgNotes         String?
+  consultantNotes  String?
+
+  evidence  TaskEvidence[]
+  comments  TaskComment[]
+  reviews   TaskReview[]
+  delays    TaskDelay[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TaskEvidence {
+  id           String   @id @default(cuid())
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String?
+  linkUrl      String?
+  uploadedById  String
+  uploadedBy    User @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model TaskReview {
+  id         String   @id @default(cuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User     @relation(fields: [reviewerId], references: [id])
+  decision   String // APPROVED | NEEDS_REVISION
+  note       String?
+  createdAt  DateTime @default(now())
+}
+
+model TaskDelay {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  reasonCode  String // DelayReasonCode
+  explanation String
+  createdAt   DateTime @default(now())
+}
+
+model AIRecommendation {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  developmentGapId String?
+  kind           String // RecommendationKind: DEVELOPMENT_NEED | TASK | PRIORITY
+  payload        String // JSON string
+  status         String @default("PENDING") // RecommendationStatus
+  createdAt      DateTime @default(now())
+}
+
+// ============================= Cross-cutting =============================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // NotificationType
+  title     String
+  body      String?
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id             String   @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  actorId        String?
+  actor          User?    @relation(fields: [actorId], references: [id])
+  action         String
+  entityType     String
+  entityId       String?
+  metadata       String   @default("{}") // JSON string
+  createdAt      DateTime @default(now())
+}
