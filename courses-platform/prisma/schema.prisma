@@ -1,0 +1,107 @@
+// مخطط قاعدة البيانات لمنصة الدورات المجانية
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  // "native" لبيئة التطوير المحلية، و"rhel-openssl-3.0.x" لبيئة تشغيل Vercel
+  // (Amazon Linux 2023) — بدونه لا يجد Prisma محرك الاستعلامات المناسب وقت التشغيل.
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// الأدوار (كسلسلة نصية لأن SQLite لا يدعم enum في Prisma): USER | ADMIN
+model User {
+  id           String    @id @default(cuid())
+  fullName     String
+  email        String    @unique
+  phone        String?
+  passwordHash String
+  role         String    @default("USER")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // استعادة كلمة المرور: رمز مؤقت صالح لمدة محدودة
+  resetToken           String?   @unique
+  resetTokenExpiresAt  DateTime?
+
+  enrollments    Enrollment[]
+  createdCourses Course[]     @relation("CourseCreatedBy")
+
+  @@index([role])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  icon      String   @default("book-open")
+  createdAt DateTime @default(now())
+
+  courses Course[]
+}
+
+// المستوى: BEGINNER | INTERMEDIATE | ADVANCED
+// النوع: ONLINE | IN_PERSON
+model Course {
+  id                String   @id @default(cuid())
+  title             String
+  slug              String   @unique
+  shortDescription  String
+  description       String
+  instructorName    String
+  providerName      String
+  level             String
+  type              String
+  location          String?
+  meetingUrl        String?
+  startDate         DateTime
+  endDate           DateTime
+  scheduleTime      String
+  durationText      String
+  totalSeats        Int
+  remainingSeats    Int
+  hasCertificate    Boolean  @default(false)
+  isPublished       Boolean  @default(true)
+  registrationOpen  Boolean  @default(true)
+  isFeatured        Boolean  @default(false)
+  coverImageUrl     String?
+  coverColor        String   @default("blue")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("CourseCreatedBy", fields: [createdById], references: [id])
+
+  enrollments Enrollment[]
+
+  @@index([categoryId])
+  @@index([startDate])
+  @@index([isPublished, registrationOpen])
+}
+
+// حالة التسجيل: ACTIVE | CANCELLED
+model Enrollment {
+  id          String    @id @default(cuid())
+  status      String    @default("ACTIVE")
+  enrolledAt  DateTime  @default(now())
+  cancelledAt DateTime?
+  cancelledBy String? // "USER" أو "ADMIN"
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // يمنع تسجيل نفس المستخدم في نفس الدورة أكثر من مرة على مستوى قاعدة البيانات
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([userId])
+  @@index([status])
+}
