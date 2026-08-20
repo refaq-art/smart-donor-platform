@@ -16,16 +16,16 @@ export async function adminCancelEnrollmentAction(formData: FormData) {
   });
   if (!enrollment || enrollment.status !== "ACTIVE") return;
 
-  await prisma.$transaction([
-    prisma.enrollment.update({
+  await prisma.$transaction(async (tx) => {
+    await tx.enrollment.update({
       where: { id: enrollmentId },
       data: { status: "CANCELLED", cancelledAt: new Date(), cancelledBy: "ADMIN" },
-    }),
-    prisma.course.update({
+    });
+    await tx.course.update({
       where: { id: enrollment.courseId },
       data: { remainingSeats: { increment: 1 } },
-    }),
-  ]);
+    });
+  });
 
   revalidatePath("/admin/enrollments");
   revalidatePath("/admin/courses");

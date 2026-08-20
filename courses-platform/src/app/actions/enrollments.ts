@@ -104,16 +104,16 @@ export async function cancelEnrollmentAction(
     return { error: "هذا التسجيل ملغى بالفعل" };
   }
 
-  await prisma.$transaction([
-    prisma.enrollment.update({
+  await prisma.$transaction(async (tx) => {
+    await tx.enrollment.update({
       where: { id: enrollmentId },
       data: { status: "CANCELLED", cancelledAt: new Date(), cancelledBy: "USER" },
-    }),
-    prisma.course.update({
+    });
+    await tx.course.update({
       where: { id: enrollment.courseId },
       data: { remainingSeats: { increment: 1 } },
-    }),
-  ]);
+    });
+  });
 
   revalidatePath(`/courses/${enrollment.course.slug}`);
   revalidatePath("/courses");
