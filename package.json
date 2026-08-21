@@ -12,7 +12,10 @@
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
     "postinstall": "prisma generate",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:unit:db:push": "DATABASE_URL=file:./test.db prisma db push --schema prisma/schema.prisma --skip-generate --accept-data-loss",
+    "test:unit": "npm run test:unit:db:push && DATABASE_URL=file:./test.db LM_AUTH_SECRET=test-secret tsx --test tests/unit/lm.test.ts",
+    "lm:promote-admin": "tsx scripts/lm-promote-admin.ts"
   },
   "dependencies": {
     "@libsql/client": "0.8.1",

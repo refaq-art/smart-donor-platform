@@ -48,6 +48,8 @@ next-env.d.ts
 # database
 /prisma/dev.db
 /prisma/dev.db-journal
+/prisma/test.db
+/prisma/test.db-journal
 
 # uploaded files
 /public/uploads/*

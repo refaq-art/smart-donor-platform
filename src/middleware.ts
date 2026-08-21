@@ -34,7 +34,11 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/api/admin/") ||
     // مهام Vercel Cron تحمي نفسها بترويسة CRON_SECRET بدل جلسة المستخدم — بلا
     // كعكة جلسة أصلًا، فيجب استثناؤها هنا وإلا رُفضت قبل وصولها للتحقق من السر.
-    pathname.startsWith("/api/cron/")
+    pathname.startsWith("/api/cron/") ||
+    // وحدة "العملاء والمهل والأقساط" منفصلة تمامًا: نظام مصادقة وجلسة (lm_session)
+    // خاص بها بالكامل، مُنفَّذ داخل layout.tsx الخاص بها. يجب استثناء مساراتها
+    // هنا وإلا رفضتها هذه الـ middleware لعدم وجود كعكة sdp_session أصلًا.
+    pathname.startsWith("/installments")
   ) {
     return NextResponse.next();
   }

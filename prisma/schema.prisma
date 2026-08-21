@@ -410,3 +410,136 @@ model ApplicationVersion {
 
   @@index([applicationId])
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// وحدة منفصلة تمامًا: نظام إدارة العملاء والمهل والأقساط والدفعات
+// (لأفراد يقرضون عملاءهم مبالغ ويستردونها بنظام مهلة أو أقساط)
+//
+// هذه الوحدة مستقلة كليًا عن باقي المخطط أعلاه (منصة المشاريع والمنح):
+// - كل نماذجها مسبوقة بـ Lm (Lending Module) ولا تربطها أي علاقة بنماذج
+//   الجمعية/المشاريع/المنح.
+// - لها نظام مصادقة خاص بها (رقم جوال + كلمة مرور، جلسة JWT منفصلة).
+// - تتشارك فقط في نفس ملف/اتصال قاعدة البيانات (SQLite) كوسيلة تشغيل عملية
+//   بدون تكلفة إضافية، مع عزل بيانات كامل عبر userId في كل استعلام.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// حساب مستخدم الوحدة. role: USER = مستخدم عادي (يرى بياناته فقط) |
+// ADMIN = مدير عام (صلاحيات كاملة على كل حسابات الوحدة).
+model LmUser {
+  id                String    @id @default(cuid())
+  phone             String    @unique
+  passwordHash      String
+  name              String
+  role              String    @default("USER")
+  isActive          Boolean   @default(true)
+  // إبطال الجلسات الصادرة قبل هذا التاريخ (تغيير كلمة المرور/تعطيل الحساب)
+  sessionsValidFrom DateTime  @default(now())
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  customers    LmCustomer[]
+  transactions LmTransaction[]
+
+  @@index([phone])
+}
+
+// عميل يخص مستخدمًا واحدًا فقط. الاسم هو الحقل الوحيد المطلوب عمدًا.
+model LmCustomer {
+  id        String   @id @default(cuid())
+  userId    String
+  user      LmUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions LmTransaction[]
+
+  @@index([userId])
+}
+
+// عملية مالية: مهلة (GRACE) أو أقساط (INSTALLMENT).
+// لتوحيد منطق توزيع الدفعات، تُمثَّل عملية "المهلة" داخليًا بقسط واحد فقط
+// (LmInstallment) بقيمة الإجمالي وتاريخ استحقاق واحد — بدل تكرار منطق منفصل.
+model LmTransaction {
+  id     String @id @default(cuid())
+  userId String
+  user   LmUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  customerId String
+  customer   LmCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  // GRACE = مهلة | INSTALLMENT = أقساط
+  type      String
+  principal Float
+  interest  Float
+  // = principal + interest، محسوب ومخزَّن وقت الإنشاء لتفادي إعادة حسابه دائمًا
+  totalAmount Float
+
+  startDate DateTime
+  // المهلة فقط: عدد الأشهر
+  months Int?
+  // الأقساط فقط: عدد الأقساط
+  installmentsCount Int?
+
+  // ذاكرة مخبأة (Cache) لمجموع الدفعات — تُحدَّث فقط داخل معاملة قاعدة بيانات
+  // عند تسجيل/حذف دفعة، ولا تُستخدم أبدًا كمصدر وحيد للحقيقة (يُعاد اشتقاقها
+  // من جدول الدفعات عند أي شك). الحالة (قادم/متأخر/...) تُشتق دائمًا لحظيًا
+  // من التواريخ والمبالغ الفعلية، ولا تُخزَّن كحقل — لأنها تتغير مع مرور الوقت
+  // نفسه دون أي تعديل على البيانات، فتخزينها يعني حتمًا بيانات قديمة.
+  paidAmount Float @default(0)
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  installments LmInstallment[]
+  payments     LmPayment[]
+
+  @@index([userId])
+  @@index([customerId])
+}
+
+model LmInstallment {
+  id            String        @id @default(cuid())
+  transactionId String
+  transaction   LmTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  number     Int
+  dueDate    DateTime
+  amount     Float
+  paidAmount Float @default(0)
+
+  allocations LmPaymentAllocation[]
+
+  @@index([transactionId])
+}
+
+// دفعة واحدة مسجَّلة على عملية؛ قد تُوزَّع على أكثر من قسط (LmPaymentAllocation).
+model LmPayment {
+  id            String        @id @default(cuid())
+  transactionId String
+  transaction   LmTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  amount      Float
+  paymentDate DateTime
+  createdAt   DateTime @default(now())
+
+  allocations LmPaymentAllocation[]
+
+  @@index([transactionId])
+}
+
+// سجل توزيع كل دفعة على الأقساط التي غطّتها — يحفظ مقدار ما خُصِّص من كل
+// دفعة لكل قسط، ليكون التوزيع قابلاً للتتبع والاسترجاع الدقيق عند الحذف.
+model LmPaymentAllocation {
+  id            String        @id @default(cuid())
+  paymentId     String
+  payment       LmPayment     @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  installmentId String
+  installment   LmInstallment @relation(fields: [installmentId], references: [id], onDelete: Cascade)
+  amount        Float
+
+  @@index([paymentId])
+  @@index([installmentId])
+}
