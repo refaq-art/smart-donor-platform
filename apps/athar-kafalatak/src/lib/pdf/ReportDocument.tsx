@@ -1,17 +1,17 @@
 import "server-only";
-import path from "path";
 import { Document, Page, Text, View, Font, StyleSheet } from "@react-pdf/renderer";
 import type { FullReport } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
-const FONTS_DIR = path.join(process.cwd(), "src/lib/pdf/fonts");
+const FONTS_BASE =
+  "https://raw.githubusercontent.com/google/fonts/main/ofl/tajawal";
 
 Font.register({
   family: "Tajawal",
   fonts: [
-    { src: path.join(FONTS_DIR, "Tajawal-Regular.ttf"), fontWeight: "normal" },
-    { src: path.join(FONTS_DIR, "Tajawal-Medium.ttf"), fontWeight: "medium" },
-    { src: path.join(FONTS_DIR, "Tajawal-Bold.ttf"), fontWeight: "bold" },
+    { src: `${FONTS_BASE}/Tajawal-Regular.ttf`, fontWeight: "normal" },
+    { src: `${FONTS_BASE}/Tajawal-Medium.ttf`, fontWeight: "medium" },
+    { src: `${FONTS_BASE}/Tajawal-Bold.ttf`, fontWeight: "bold" },
   ],
 });
 
