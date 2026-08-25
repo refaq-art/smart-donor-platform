@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="شخصية تمثيلية">
+  <defs>
+    <radialGradient id="bgGrad-male-basic_needs" cx="35%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#2E7D57"/>
+      <stop offset="100%" stop-color="#1F4D3D"/>
+    </radialGradient>
+    <clipPath id="clip-male-basic_needs">
+      <circle cx="120" cy="120" r="118"/>
+    </clipPath>
+  </defs>
+  <circle cx="120" cy="120" r="118" fill="url(#bgGrad-male-basic_needs)"/>
+  
+  <g clip-path="url(#clip-male-basic_needs)">
+    
+    <path d="M60 216 Q60 146 120 146 Q180 146 180 216 Z" fill="#F7EFD9"/>
+    <circle cx="120" cy="98" r="33" fill="#F7EFD9"/>
+    <path d="M87 92 Q88 60 120 58 Q152 60 153 92 Q152 72 120 68 Q88 72 87 92 Z" fill="#A9822F"/>
+  
+  </g>
+  <circle cx="120" cy="120" r="118" fill="none" stroke="#C8A24A" stroke-width="3"/>
+  <circle cx="176" cy="178" r="30" fill="#F7EFD9" stroke="#C8A24A" stroke-width="3"/>
+  <g transform="translate(56,18)">
+    <path d="M104 163 L112 158 L120 164 L128 158 L136 163 L136 168 L129 172 L129 196 L111 196 L111 172 L104 168 Z" fill="#1F4D3D"/>
+  </g>
+</svg>

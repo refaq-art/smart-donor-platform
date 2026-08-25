@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="شخصية تمثيلية">
+  <defs>
+    <radialGradient id="bgGrad-female-thank_you" cx="35%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#2E7D57"/>
+      <stop offset="100%" stop-color="#1F4D3D"/>
+    </radialGradient>
+    <clipPath id="clip-female-thank_you">
+      <circle cx="120" cy="120" r="118"/>
+    </clipPath>
+  </defs>
+  <circle cx="120" cy="120" r="118" fill="url(#bgGrad-female-thank_you)"/>
+  <circle cx="120" cy="120" r="112" fill="none" stroke="#C8A24A" stroke-width="2" opacity="0.55"/>
+  <g clip-path="url(#clip-female-thank_you)">
+    
+    <path d="M56 216 Q56 148 120 148 Q184 148 184 216 Z" fill="#C8A24A"/>
+    <path d="M80 214 Q78 140 120 130 Q162 140 160 214 Z" fill="#C8A24A"/>
+    <circle cx="120" cy="100" r="30" fill="#F7EFD9"/>
+    <path d="M84 100 Q83 52 120 50 Q157 52 156 100 Q157 76 120 66 Q83 76 84 100 Z" fill="#A9822F"/>
+  
+  </g>
+  <circle cx="120" cy="120" r="118" fill="none" stroke="#C8A24A" stroke-width="3"/>
+  <circle cx="176" cy="178" r="30" fill="#F7EFD9" stroke="#C8A24A" stroke-width="3"/>
+  <g transform="translate(56,18)">
+    <path d="M120 195 C102 182 100 168 111 163 C117 160 120 166 120 166 C120 166 123 160 129 163 C140 168 138 182 120 195 Z" fill="#1F4D3D"/>
+  </g>
+</svg>

@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-beige-light text-forest-900 font-tajawal antialiased;
+}
+
+::selection {
+  @apply bg-gold/30;
+}
+
+.geo-pattern {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(31, 77, 61, 0.08) 1px,
+    transparent 0
+  );
+  background-size: 22px 22px;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+}
+
+@keyframes count-up-glow {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
