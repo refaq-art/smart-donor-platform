@@ -7,6 +7,13 @@
 هذا مشروع جديد بالكامل، مستقل عن أي منصة أخرى في هذا المستودع — يعيش في `apps/athar-kafalatak`
 بقاعدة بيانات Supabase خاصة به.
 
+## النشر (Vercel)
+
+مشروع Vercel مستقل باسم `athar-kafalatak-report` (Root Directory: `apps/athar-kafalatak`،
+Production Branch: `claude/athar-kafala-platform-hf77xq`)، منفصل تمامًا عن أي مشروع Vercel آخر
+في هذا الحساب. متغيرات البيئة (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
+مضبوطة من إعدادات المشروع على Vercel مباشرة، وليست مضمّنة في الكود.
+
 ## التقنيات
 
 Next.js 14 (App Router) · TypeScript · Tailwind CSS · مكونات بأسلوب shadcn/ui مكتوبة يدويًا ·
